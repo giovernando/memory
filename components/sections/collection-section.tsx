@@ -1,33 +1,35 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FadeImage } from "@/components/fade-image";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-const menuItems = [
+const DEFAULT_MENU_ITEMS = [
   {
-    id: 1,
+    id: "static_1",
     name: "Signature Espresso",
     description: "Rich and robust double-shot espresso brewed from our premium house blend.",
     price: "$6.50",
     image: "/images/foto10.webp",
   },
   {
-    id: 2,
+    id: "static_2",
     name: "Vanilla Cloud Latte",
     description: "Smooth espresso blended with creamy milk and cold-pressed vanilla bean syrup.",
     price: "$8.40",
     image: "/images/foto11.webp",
   },
   {
-    id: 3,
+    id: "static_3",
     name: "Matcha Harmony",
     description: "Japanese matcha whisked with silky steamed milk.",
     price: "$9.80",
     image: "/images/foto12.webp",
   },
   {
-    id: 4,
+    id: "static_4",
     name: "Blueberry Muffin",
     description: "Freshly baked muffin bursting with plump blueberries and a crumble top.",
     price: "$6.20",
@@ -36,6 +38,37 @@ const menuItems = [
 ];
 
 export function CollectionSection() {
+  const [menuItems, setMenuItems] = useState(DEFAULT_MENU_ITEMS);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) return;
+
+    async function loadMenu() {
+      try {
+        const { data, error } = await supabase
+          .from("menu_items")
+          .select("*")
+          .order("sort_order", { ascending: true });
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const mapped = data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            image: item.image_url,
+          }));
+          setMenuItems(mapped);
+        }
+      } catch (err) {
+        console.warn("Failed to load menu items from Supabase, using default local assets:", err);
+      }
+    }
+
+    loadMenu();
+  }, []);
+
   // Framer Motion Animation Variants
   const headerVariants = {
     hidden: { opacity: 0, y: 30 },
@@ -45,6 +78,7 @@ export function CollectionSection() {
       transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
     }
   };
+
 
   const containerVariants = {
     hidden: { opacity: 0 },

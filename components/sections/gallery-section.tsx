@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CardsParallax, type iCardItem } from "@/components/ui/scroll-cards";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-const cardItems: iCardItem[] = [
+const DEFAULT_CARD_ITEMS: iCardItem[] = [
   {
     title: "Sunrise Vista",
     description: "Modern architecture glowing under the warm morning sun",
@@ -42,9 +44,44 @@ const cardItems: iCardItem[] = [
 ];
 
 export function GallerySection() {
+  const [items, setItems] = useState<iCardItem[]>(DEFAULT_CARD_ITEMS);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) return;
+
+    async function loadCards() {
+      try {
+        const { data, error } = await supabase
+          .from("section_images")
+          .select("*")
+          .eq("section", "homepage_gallery")
+          .order("sort_order", { ascending: true });
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const mapped = data.map((item) => ({
+            title: item.title || "",
+            description: item.description || "",
+            tag: item.tag || "",
+            src: item.image_url,
+            link: item.link || "#",
+            color: item.color || "#0a0a0a",
+            textColor: item.text_color || "white",
+          }));
+          setItems(mapped);
+        }
+      } catch (err) {
+        console.warn("Failed to load homepage gallery cards from Supabase, using defaults:", err);
+      }
+    }
+
+    loadCards();
+  }, []);
+
   return (
     <section id="gallery" className="bg-black">
-      <CardsParallax items={cardItems} />
+      <CardsParallax items={items} />
     </section>
   );
 }
+

@@ -65,18 +65,7 @@ function ScrollRevealText({ text }: { text: string }) {
   );
 }
 
-const sideImages = [
-  {
-    src: "/images/foto4.webp",
-    alt: "Interior view with landscape",
-    position: "left",
-  },
-  {
-    src: "/images/foto5.webp",
-    alt: "Rusted metal texture",
-    position: "right",
-  },
-];
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const textCycles = [
   "Good Coffee Good Idea.",
@@ -90,9 +79,69 @@ export function TechnologySection() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [textProgress, setTextProgress] = useState(0);
 
+  // Dynamic Image States with local fallbacks
+  const [techLeft, setTechLeft] = useState("/images/foto4.webp");
+  const [techRight, setTechRight] = useState("/images/foto5.webp");
+  const [centerImages, setCenterImages] = useState({
+    center1: "/images/hero1.webp",
+    center2: "/images/hero2.webp",
+    center3: "/images/hero3.webp",
+    center4: "/images/foto21.webp",
+  });
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) return;
+
+    async function fetchTechImages() {
+      try {
+        const { data, error } = await supabase
+          .from("section_images")
+          .select("*")
+          .eq("section", "technology");
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          let left = "/images/foto4.webp";
+          let right = "/images/foto5.webp";
+          const center = {
+            center1: "/images/hero1.webp",
+            center2: "/images/hero2.webp",
+            center3: "/images/hero3.webp",
+            center4: "/images/foto21.webp",
+          };
+
+          data.forEach((item) => {
+            if (item.key === "tech_left_1") {
+              left = item.image_url;
+            } else if (item.key === "tech_right_1") {
+              right = item.image_url;
+            } else if (item.key === "tech_center_1") {
+              center.center1 = item.image_url;
+            } else if (item.key === "tech_center_2") {
+              center.center2 = item.image_url;
+            } else if (item.key === "tech_center_3") {
+              center.center3 = item.image_url;
+            } else if (item.key === "tech_center_4") {
+              center.center4 = item.image_url;
+            }
+          });
+
+          setTechLeft(left);
+          setTechRight(right);
+          setCenterImages(center);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch technology images from Supabase, using defaults:", err);
+      }
+    }
+
+    fetchTechImages();
+  }, []);
+
   const descriptionText = "Passive architecture reimagining modern living. Triple glazing, reinforced insulation and natural ventilation combine with solar panels to create an energy-autonomous home. Bio-sourced materials like solid wood and hemp wool ensure healthy indoor air and minimal ecological footprint.";
 
   useEffect(() => {
+
     const handleScroll = () => {
       if (!sectionRef.current) return;
 
@@ -166,16 +215,13 @@ export function TechnologySection() {
                 opacity: sideOpacity,
               }}
             >
-              {sideImages.filter(img => img.position === "left").map((img, idx) => (
-                <CoffeeImage
-                  key={idx}
-                  src={img.src || "/placeholder.svg"}
-                  alt={img.alt}
-                  fill
-                  className="object-cover"
-                  placeholderType="both"
-                />
-              ))}
+              <CoffeeImage
+                src={techLeft || "/placeholder.svg"}
+                alt="Interior view with landscape"
+                fill
+                className="object-cover"
+                placeholderType="both"
+              />
             </div>
 
             {/* Main Center Image */}
@@ -190,7 +236,7 @@ export function TechnologySection() {
               {/* Layered Images - Progressive Fade In */}
               {/* Image 1 - Base layer - Sunrise/Sunset with sun rays */}
               <Image
-                src="/images/hero1.webp"
+                src={centerImages.center1}
                 alt="Modern architecture at sunrise"
                 fill
                 className="object-cover"
@@ -201,7 +247,7 @@ export function TechnologySection() {
 
               {/* Image 2 - Daytime scene - Fades in during first text cycle */}
               <Image
-                src="/images/hero2.webp"
+                src={centerImages.center2}
                 alt="Modern architecture in daylight"
                 fill
                 className="absolute inset-0 object-cover"
@@ -213,7 +259,7 @@ export function TechnologySection() {
 
               {/* Image 3 - Dusk/Evening - Fades in during second text cycle */}
               <Image
-                src="/images/hero3.webp"
+                src={centerImages.center3}
                 alt="Modern architecture at dusk"
                 fill
                 className="absolute inset-0 object-cover"
@@ -225,7 +271,7 @@ export function TechnologySection() {
 
               {/* Image 4 - Night with stars - Fades in during third text cycle */}
               <Image
-                src="/images/foto21.webp"
+                src={centerImages.center4}
                 alt="Modern architecture at night"
                 fill
                 className="absolute inset-0 object-cover"
@@ -308,17 +354,15 @@ export function TechnologySection() {
                 opacity: sideOpacity,
               }}
             >
-              {sideImages.filter(img => img.position === "right").map((img, idx) => (
-                <CoffeeImage
-                  key={idx}
-                  src={img.src || "/placeholder.svg"}
-                  alt={img.alt}
-                  fill
-                  className="object-cover"
-                  placeholderType="both"
-                />
-              ))}
+              <CoffeeImage
+                src={techRight || "/placeholder.svg"}
+                alt="Rusted metal texture"
+                fill
+                className="object-cover"
+                placeholderType="both"
+              />
             </div>
+
 
           </div>
         </div>
