@@ -7,25 +7,25 @@ const word = "Coffee";
 
 const sideImages = [
   {
-    src: "/images/hero-side-1.png",
+    src: "/images/side1.webp",
     alt: "Modern architecture with corten steel",
     position: "left",
     span: 1,
   },
   {
-    src: "/images/hero-side-2.png",
+    src: "/images/side2.webp",
     alt: "Aerial view of modern home",
     position: "left",
     span: 1,
   },
   {
-    src: "/images/hero-side-3.png",
+    src: "/images/side3.webp",
     alt: "Interior view with landscape",
     position: "right",
     span: 1,
   },
   {
-    src: "/images/hero-side-4.png",
+    src: "/images/side4.webp",
     alt: "Modern architecture at night",
     position: "right",
     span: 1,
@@ -125,12 +125,12 @@ export function HeroSection() {
                 borderRadius: `${borderRadius}px`,
               }}
             >
-              {/* Text Behind - Fades out first */}
+              {/* Text in Front - Fades out first */}
               <div
-                className="absolute inset-0 z-0 flex items-center justify-center"
+                className="absolute inset-0 z-20 flex items-center justify-center"
                 style={{ opacity: textOpacity, transform: 'translateY(-200px)' }}
               >
-                <h1 className="whitespace-nowrap text-[35vw] font-bold leading-[0.8] tracking-tighter text-black">
+                <h1 className="whitespace-nowrap text-[35vw] font-bold leading-[0.8] tracking-tighter text-white">
                   {word.split("").map((letter, index) => (
                     <span
                       key={index}
@@ -148,12 +148,14 @@ export function HeroSection() {
               </div>
 
               <Image
-                src="/images/hero-mono.png"
-                alt="Modern architectural structure with reflection"
+                src="/images/hero3.jpeg"
+                alt="Freshly brewed coffee"
                 fill
                 className="absolute inset-0 z-10 object-cover"
                 priority
               />
+              {/* Subtle overlay to ensure text contrast and premium feel */}
+              <div className="absolute inset-0 z-10 bg-black/25" />
             </div>
 
             {/* Right Column */}
