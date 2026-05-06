@@ -16,14 +16,14 @@ export function EditorialSection() {
 
   const updateParallax = useCallback(() => {
     if (!videoRef.current) return;
-    
+
     const rect = videoRef.current.getBoundingClientRect();
     const windowHeight = window.innerHeight;
-    
+
     // Calculate when video enters and exits viewport
     const videoTop = rect.top;
     const videoBottom = rect.bottom;
-    
+
     // Progress from 0 (entering viewport) to 1 (exiting viewport)
     if (videoBottom > 0 && videoTop < windowHeight) {
       const progress = 1 - (videoTop + rect.height / 2) / (windowHeight + rect.height);
@@ -41,7 +41,7 @@ export function EditorialSection() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     updateParallax();
-    
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
       if (rafRef.current) {
@@ -56,12 +56,12 @@ export function EditorialSection() {
   return (
     <section className="bg-background">
       {/* Newsletter Banner */}
-      
+
 
       {/* Decorative Icons */}
       <div className="flex items-center justify-center gap-6 pb-20">
-        
-        
+
+
       </div>
 
       {/* Full-width Video with Parallax */}
@@ -79,7 +79,7 @@ export function EditorialSection() {
             WebkitBackfaceVisibility: 'hidden',
             willChange: 'transform',
           }}
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/27eb7fb4-0105-4010-ac9e-0ac977a31b05_1-FZ89nvBAAsR3caRJbhYv7T2mjBofth.mp4"
+          src="/vidio/cofe.mp4"
         />
       </div>
 
