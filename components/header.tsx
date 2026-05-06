@@ -88,7 +88,8 @@ export function Header() {
   return (
     <>
       <header className="fixed top-4 inset-x-0 mx-auto z-50 w-[90%] max-w-5xl bg-transparent border-none pointer-events-none">
-        <div className="flex items-center justify-between w-full">
+        {/* Mobile Header (shown on mobile, hidden on desktop) */}
+        <div className="flex md:hidden items-center justify-between w-full">
           {/* Left Floating Pill (Logo) */}
           <Link
             href="#hero"
@@ -127,6 +128,57 @@ export function Header() {
               />
             </motion.div>
           </button>
+        </div>
+
+        {/* Desktop Header (hidden on mobile, shown on desktop) */}
+        <div className="hidden md:flex pointer-events-auto items-center justify-between w-full rounded-full bg-[#E4E1DA]/85 backdrop-blur-md border border-[#2F3E30]/10 shadow-lg shadow-[#2F3E30]/5 px-10 py-3.5 transition-all duration-300">
+          {/* Logo */}
+          <Link
+            href="#hero"
+            className="text-[#2F3E30] font-sans font-bold text-xl lg:text-2xl tracking-tight hover:scale-105 active:scale-95 transition-all duration-300 block"
+          >
+            Coffee.
+          </Link>
+
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-8 lg:gap-12">
+            <Link
+              href="#gallery"
+              className="text-[#2F3E30] font-sans font-semibold text-sm lg:text-base transition-all duration-300 hover:opacity-80 relative group py-1"
+            >
+              Menu
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#2F3E30] group-hover:w-1/2 transition-all duration-300 rounded-full" />
+            </Link>
+            <Link
+              href="#technology"
+              className="text-[#2F3E30] font-sans font-semibold text-sm lg:text-base transition-all duration-300 hover:opacity-80 relative group py-1"
+            >
+              About
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#2F3E30] group-hover:w-1/2 transition-all duration-300 rounded-full" />
+            </Link>
+            <Link
+              href="#accessories"
+              className="text-[#2F3E30] font-sans font-semibold text-sm lg:text-base transition-all duration-300 hover:opacity-80 relative group py-1"
+            >
+              Gallery
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#2F3E30] group-hover:w-1/2 transition-all duration-300 rounded-full" />
+            </Link>
+            <Link
+              href="#about"
+              className="text-[#2F3E30] font-sans font-semibold text-sm lg:text-base transition-all duration-300 hover:opacity-80 relative group py-1"
+            >
+              Contact
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#2F3E30] group-hover:w-1/2 transition-all duration-300 rounded-full" />
+            </Link>
+          </nav>
+
+          {/* Reservasi Button */}
+          <Link
+            href="#reserve"
+            className="px-8 py-3 rounded-full bg-[#738A75] hover:bg-[#5E7560] text-white font-sans font-semibold text-sm lg:text-base shadow-md shadow-[#738A75]/10 hover:scale-105 active:scale-95 transition-all duration-300 block"
+          >
+            Reservasi
+          </Link>
         </div>
       </header>
 
