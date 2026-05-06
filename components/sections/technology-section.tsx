@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { CoffeeImage } from "@/components/coffee-image";
 
 function ScrollRevealText({ text }: { text: string }) {
   const containerRef = useRef<HTMLParagraphElement>(null);
@@ -166,12 +167,13 @@ export function TechnologySection() {
               }}
             >
               {sideImages.filter(img => img.position === "left").map((img, idx) => (
-                <Image
+                <CoffeeImage
                   key={idx}
                   src={img.src || "/placeholder.svg"}
                   alt={img.alt}
                   fill
                   className="object-cover"
+                  placeholderType="both"
                 />
               ))}
             </div>
@@ -307,12 +309,13 @@ export function TechnologySection() {
               }}
             >
               {sideImages.filter(img => img.position === "right").map((img, idx) => (
-                <Image
+                <CoffeeImage
                   key={idx}
                   src={img.src || "/placeholder.svg"}
                   alt={img.alt}
                   fill
                   className="object-cover"
+                  placeholderType="both"
                 />
               ))}
             </div>
