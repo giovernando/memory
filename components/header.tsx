@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { Calendar } from "lucide-react";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,110 +18,195 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Framer Motion Variants
+  const hamburgerVariants: Variants = {
+    closed: { rotate: 0 },
+    opened: { rotate: 180 },
+  };
+
+  const line1Variants: Variants = {
+    closed: { rotate: 0, y: 0 },
+    opened: { rotate: 45, y: 5 },
+  };
+
+  const line2Variants: Variants = {
+    closed: { opacity: 1, scale: 1 },
+    opened: { opacity: 0, scale: 0 },
+  };
+
+  const line3Variants: Variants = {
+    closed: { rotate: 0, y: 0 },
+    opened: { rotate: -45, y: -5 },
+  };
+
+  const backdropVariants: Variants = {
+    closed: { opacity: 0 },
+    opened: { opacity: 1 },
+  };
+
+  const cardVariants: Variants = {
+    closed: {
+      opacity: 0,
+      scale: 0.92,
+      y: -20,
+      transition: {
+        type: "spring",
+        bounce: 0,
+        duration: 0.35,
+        staggerChildren: 0.04,
+        staggerDirection: -1,
+        when: "afterChildren",
+      },
+    },
+    opened: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        bounce: 0.12,
+        duration: 0.5,
+        staggerChildren: 0.06,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const menuItemVariants: Variants = {
+    closed: {
+      opacity: 0,
+      y: 12,
+      transition: { duration: 0.15, ease: "easeIn" },
+    },
+    opened: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 130, damping: 15 },
+    },
+  };
+
   return (
-    <header
-      className={`fixed top-4 inset-x-0 mx-auto z-50 w-[90%] max-w-3xl transition-all duration-300 ${isScrolled ? "bg-background/80 backdrop-blur-md rounded-full" : "bg-transparent"}`}
-      style={{
-        boxShadow: isScrolled ? "rgba(14, 63, 126, 0.04) 0px 0px 0px 1px, rgba(42, 51, 69, 0.04) 0px 1px 1px -0.5px, rgba(42, 51, 70, 0.04) 0px 3px 3px -1.5px, rgba(42, 51, 70, 0.04) 0px 6px 6px -3px, rgba(14, 63, 126, 0.04) 0px 12px 12px -6px, rgba(14, 63, 126, 0.04) 0px 24px 24px -12px" : "none"
-      }}
-    >
-      <div className="flex items-center justify-between transition-all duration-300 px-2 pl-5 py-2">
-        {/* Logo */}
-        <Link href="#hero" className="text-lg font-medium tracking-tight transition-colors duration-300 text-foreground">
-          Coffee
-        </Link>
+    <>
+      <header className="fixed top-4 inset-x-0 mx-auto z-50 w-[90%] max-w-5xl bg-transparent border-none pointer-events-none">
+        <div className="flex items-center justify-between w-full">
+          {/* Left Floating Pill (Logo) */}
+          <Link
+            href="#hero"
+            className="pointer-events-auto px-6 py-2.5 rounded-full bg-[#F4F1EA] text-[#2F3E30] font-sans font-semibold text-lg border border-[#2F3E30]/10 shadow-md transition-all duration-300 hover:scale-105 active:scale-95 block"
+          >
+            Coffee.
+          </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-10 md:flex">
-          <Link
-            href="#technology"
-            className="text-sm transition-colors text-muted-foreground hover:text-foreground"
+          {/* Right Floating Circle (Hamburger Menu Button) */}
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="pointer-events-auto relative z-50 h-12 w-12 rounded-full bg-[#F4F1EA] text-[#2F3E30] border border-[#2F3E30]/10 flex items-center justify-center shadow-md transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none"
+            aria-label="Toggle menu"
           >
-            About
-          </Link>
-          <Link
-            href="#gallery"
-            className="text-sm transition-colors text-muted-foreground hover:text-foreground"
-          >
-            Menu
-          </Link>
-          <Link
-            href="#accessories"
-            className="text-sm transition-colors text-muted-foreground hover:text-foreground"
-          >
-            Gallery
-          </Link>
-          <Link
-            href="#about"
-            className="text-sm transition-colors text-muted-foreground hover:text-foreground"
-          >
-            Contact
-          </Link>
-        </nav>
-
-        {/* CTA */}
-        <div className="hidden items-center gap-6 md:flex">
-          <Link
-            href="#reserve"
-            className="px-4 py-2 text-sm font-medium transition-all rounded-full bg-foreground text-background hover:opacity-80"
-          >
-            Reservasi
-          </Link>
+            <motion.div
+              className="flex flex-col items-center justify-center gap-1.2 w-5 h-5"
+              animate={isMenuOpen ? "opened" : "closed"}
+              variants={hamburgerVariants}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <motion.span
+                variants={line1Variants}
+                className="h-[2px] w-5 rounded-full bg-[#2F3E30] block origin-center"
+                transition={{ duration: 0.3 }}
+              />
+              <motion.span
+                variants={line2Variants}
+                className="h-[2px] w-5 rounded-full bg-[#2F3E30] block origin-center"
+                transition={{ duration: 0.2 }}
+              />
+              <motion.span
+                variants={line3Variants}
+                className="h-[2px] w-5 rounded-full bg-[#2F3E30] block origin-center"
+                transition={{ duration: 0.3 }}
+              />
+            </motion.div>
+          </button>
         </div>
+      </header>
 
-        {/* Mobile Menu Button */}
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="transition-colors md:hidden text-foreground"
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+      {/* Floating Fullscreen Blur Overlay and Menu Card */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            {/* Backdrop Blur Overlay */}
+            <motion.div
+              initial="closed"
+              animate="opened"
+              exit="closed"
+              variants={backdropVariants}
+              onClick={() => setIsMenuOpen(false)}
+              className="fixed inset-0 bg-black/15 backdrop-blur-md z-40 cursor-pointer pointer-events-auto"
+              transition={{ duration: 0.4 }}
+            />
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="border-t border-border bg-background px-6 py-8 md:hidden rounded-b-2xl">
-          <nav className="flex flex-col gap-6">
-            <Link
-              href="#technology"
-              className="text-lg text-foreground"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              href="#gallery"
-              className="text-lg text-foreground"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Menu
-            </Link>
-            <Link
-              href="#accessories"
-              className="text-lg text-foreground"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Gallery
-            </Link>
-            <Link
-              href="#about"
-              className="text-lg text-foreground"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            <Link
-              href="#reserve"
-              className="mt-4 bg-foreground px-5 py-3 text-center text-sm font-medium text-background rounded-full"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Reservasi
-            </Link>
-          </nav>
-        </div>
-      )}
-    </header>
+            {/* Menu Card */}
+            <div className="fixed inset-x-0 top-20 mx-auto z-45 w-[90%] max-w-[360px] pointer-events-none">
+              <motion.div
+                initial="closed"
+                animate="opened"
+                exit="closed"
+                variants={cardVariants}
+                className="pointer-events-auto w-full rounded-[36px] border border-[#2F3E30]/5 bg-[#F4F1EA] px-8 py-10 shadow-2xl shadow-[#2F3E30]/15 flex flex-col items-center justify-center"
+              >
+                <nav className="flex flex-col items-center gap-7 w-full">
+                  <motion.div variants={menuItemVariants} className="text-center">
+                    <Link
+                      href="#gallery"
+                      className="text-xl font-bold text-[#2F3E30] transition-colors hover:opacity-60 block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Menu
+                    </Link>
+                  </motion.div>
+                  <motion.div variants={menuItemVariants} className="text-center">
+                    <Link
+                      href="#technology"
+                      className="text-xl font-bold text-[#2F3E30] transition-colors hover:opacity-60 block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      About
+                    </Link>
+                  </motion.div>
+                  <motion.div variants={menuItemVariants} className="text-center">
+                    <Link
+                      href="#accessories"
+                      className="text-xl font-bold text-[#2F3E30] transition-colors hover:opacity-60 block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Gallery
+                    </Link>
+                  </motion.div>
+                  <motion.div variants={menuItemVariants} className="text-center">
+                    <Link
+                      href="#about"
+                      className="text-xl font-bold text-[#2F3E30] transition-colors hover:opacity-60 block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Contact
+                    </Link>
+                  </motion.div>
+                  <motion.div variants={menuItemVariants} className="w-full mt-2">
+                    <Link
+                      href="#reserve"
+                      className="w-full py-4 rounded-full bg-[#738A75] text-[#F4F1EA] flex items-center justify-center gap-2 font-bold text-base shadow-md shadow-[#738A75]/15 hover:bg-[#617763] transition-colors duration-300"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Reserve Now
+                    </Link>
+                  </motion.div>
+                </nav>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
