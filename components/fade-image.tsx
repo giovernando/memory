@@ -67,13 +67,15 @@ export function FadeImage({ className, fadeDelay = 0, ...props }: FadeImageProps
           </div>
         </div>
       )}
-      <Image
-        {...props}
-        className={`${className || ""} transition-all duration-700 ease-out ${
-          isVisible && isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-[1.02]"
-        }`}
-        onLoad={() => setIsLoaded(true)}
-      />
+      {isVisible && (
+        <Image
+          {...props}
+          className={`${className || ""} transition-all duration-700 ease-out ${
+            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-[1.02]"
+          }`}
+          onLoad={() => setIsLoaded(true)}
+        />
+      )}
     </div>
   );
 }
