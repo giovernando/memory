@@ -67,12 +67,12 @@ function ScrollRevealText({ text }: { text: string }) {
 
 const sideImages = [
   {
-    src: "/images/interior-view.png",
+    src: "/images/foto4.webp",
     alt: "Interior view with landscape",
     position: "left",
   },
   {
-    src: "/images/rusted-metal.png",
+    src: "/images/foto5.webp",
     alt: "Rusted metal texture",
     position: "right",
   },
@@ -190,7 +190,7 @@ export function TechnologySection() {
               {/* Layered Images - Progressive Fade In */}
               {/* Image 1 - Base layer - Sunrise/Sunset with sun rays */}
               <Image
-                src="/images/mono-1.png"
+                src="/images/hero1.webp"
                 alt="Modern architecture at sunrise"
                 fill
                 className="object-cover"
@@ -201,7 +201,7 @@ export function TechnologySection() {
 
               {/* Image 2 - Daytime scene - Fades in during first text cycle */}
               <Image
-                src="/images/mono-2.png"
+                src="/images/hero2.webp"
                 alt="Modern architecture in daylight"
                 fill
                 className="absolute inset-0 object-cover"
@@ -213,7 +213,7 @@ export function TechnologySection() {
 
               {/* Image 3 - Dusk/Evening - Fades in during second text cycle */}
               <Image
-                src="/images/mono-3.png"
+                src="/images/hero3.webp"
                 alt="Modern architecture at dusk"
                 fill
                 className="absolute inset-0 object-cover"
@@ -225,7 +225,7 @@ export function TechnologySection() {
 
               {/* Image 4 - Night with stars - Fades in during third text cycle */}
               <Image
-                src="/images/mono-4.png"
+                src="/images/foto21.webp"
                 alt="Modern architecture at night"
                 fill
                 className="absolute inset-0 object-cover"
