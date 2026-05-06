@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { CoffeeImage } from "@/components/coffee-image";
 
 const word = "Coffee";
 
@@ -105,11 +106,12 @@ export function HeroSection() {
                     borderRadius: `${borderRadius}px`,
                   }}
                 >
-                  <Image
+                  <CoffeeImage
                     src={img.src || "/placeholder.svg"}
                     alt={img.alt}
                     fill
                     className="object-cover"
+                    placeholderType="both"
                   />
                 </div>
               ))}
@@ -147,12 +149,13 @@ export function HeroSection() {
                 </h1>
               </div>
 
-              <Image
+              <CoffeeImage
                 src="/images/hero3.jpeg"
                 alt="Freshly brewed coffee"
                 fill
                 className="absolute inset-0 z-10 object-cover"
                 priority
+                placeholderType="blur"
               />
               {/* Subtle overlay to ensure text contrast and premium feel */}
               <div className="absolute inset-0 z-10 bg-black/25" />
@@ -177,11 +180,12 @@ export function HeroSection() {
                     borderRadius: `${borderRadius}px`,
                   }}
                 >
-                  <Image
+                  <CoffeeImage
                     src={img.src || "/placeholder.svg"}
                     alt={img.alt}
                     fill
                     className="object-cover"
+                    placeholderType="both"
                   />
                 </div>
               ))}
