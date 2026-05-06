@@ -3,10 +3,10 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 
 const specs = [
-  { label: "Surface Area", value: "180m²" },
-  { label: "Energy Use", value: "15 kWh/m²" },
-  { label: "Solar Panels", value: "40 m²" },
-  { label: "Carbon Balance", value: "-20%" },
+  { label: "Coffee Varietes", value: "12+" },
+  { label: "Brewing Hours", value: "14h" },
+  { label: "Dailt Guests", value: "150+" },
+  { label: "Customert Rating", value: "4.9/5" },
 ];
 
 export function EditorialSection() {
