@@ -8,6 +8,7 @@ import { X, Coffee, Clock, Info, ChevronRight, Award, Flame, Star, Sparkles } fr
 import { Header } from "@/components/header";
 import { FooterSection } from "@/components/sections/footer-section";
 import { FadeImage } from "@/components/fade-image";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 interface GalleryItem {
   id: string;
@@ -285,15 +286,54 @@ export default function GalleryPage() {
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [activeCategory, setActiveCategory] = useState("all");
   const [mounted, setMounted] = useState(false);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(GALLERY_ITEMS);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+
+    if (!isSupabaseConfigured() || !supabase) {
+      setLoading(false);
+      return;
+    }
+
+    async function loadGallery() {
+      try {
+        const { data, error } = await supabase
+          .from("gallery_items")
+          .select("*")
+          .order("sort_order", { ascending: true });
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const mapped: GalleryItem[] = data.map((item) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            categoryLabel: item.category_label,
+            src: item.src,
+            description: item.description,
+            detailedDescription: item.detailed_description,
+            specs: item.specs as Record<string, string>,
+            rating: item.rating,
+            accentColor: item.accent_color,
+          }));
+          setGalleryItems(mapped);
+        }
+      } catch (err) {
+        console.warn("Failed to load gallery items from Supabase, using defaults:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGallery();
   }, []);
 
   // Filter gallery items based on category
   const filteredItems = activeCategory === "all"
-    ? GALLERY_ITEMS
-    : GALLERY_ITEMS.filter(item => item.category === activeCategory);
+    ? galleryItems
+    : galleryItems.filter(item => item.category === activeCategory);
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -369,7 +409,7 @@ export default function GalleryPage() {
         </div>
 
         {/* Gallery Grid (4 Columns Desktop/Tablet, 2 Columns Mobile) */}
-        {!mounted ? (
+        {!mounted || loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8 w-full">
             {Array.from({ length: 8 }).map((_, index) => (
               <div
