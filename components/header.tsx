@@ -157,10 +157,10 @@ export function Header() {
               <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#2F3E30] group-hover:w-1/2 transition-all duration-300 rounded-full" />
             </Link>
             <Link
-              href="#accessories"
+              href="#signature-menu"
               className="text-[#2F3E30] font-sans font-semibold text-sm lg:text-base transition-all duration-300 hover:opacity-80 relative group py-1"
             >
-              Gallery
+              Signature
               <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[#2F3E30] group-hover:w-1/2 transition-all duration-300 rounded-full" />
             </Link>
             <Link
@@ -227,11 +227,11 @@ export function Header() {
                   </motion.div>
                   <motion.div variants={menuItemVariants} className="text-center">
                     <Link
-                      href="#accessories"
+                      href="#signature-menu"
                       className="text-xl font-bold text-[#2F3E30] transition-colors hover:opacity-60 block"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Gallery
+                      Signature
                     </Link>
                   </motion.div>
                   <motion.div variants={menuItemVariants} className="text-center">

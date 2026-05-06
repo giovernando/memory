@@ -5,8 +5,8 @@ import { useRef, useState, useEffect, useCallback } from "react";
 const specs = [
   { label: "Coffee Varietes", value: "12+" },
   { label: "Brewing Hours", value: "14h" },
-  { label: "Dailt Guests", value: "150+" },
-  { label: "Customert Rating", value: "4.9/5" },
+  { label: "Daily Guests", value: "150+" },
+  { label: "Customer Rating", value: "4.9/5" },
 ];
 
 export function EditorialSection() {
