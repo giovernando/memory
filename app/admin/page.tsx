@@ -9,13 +9,74 @@ import {
   Database, RefreshCw, BarChart3, Clock, Settings, Mail, Lock
 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import imageCompression from "browser-image-compression";
 
 // Helper for default local/static records so the Admin is immediately pre-populated for a premium experience
 const DEFAULT_MENU_ITEMS = [
-  { id: "1", name: "Signature Espresso", description: "Rich and robust double-shot espresso brewed from our premium house blend.", price: "$6.50", image_url: "/images/foto10.webp" },
-  { id: "2", name: "Vanilla Cloud Latte", description: "Smooth espresso blended with creamy milk and cold-pressed vanilla bean syrup.", price: "$8.40", image_url: "/images/foto11.webp" },
-  { id: "3", name: "Matcha Harmony", description: "Japanese matcha whisked with silky steamed milk.", price: "$9.80", image_url: "/images/foto12.webp" },
-  { id: "4", name: "Blueberry Muffin", description: "Freshly baked muffin bursting with plump blueberries and a crumble top.", price: "$6.20", image_url: "/images/foto13.webp" }
+  { 
+    id: "1", 
+    name: "Signature Espresso", 
+    description: "Rich and robust double-shot espresso brewed from our premium house blend.", 
+    price: "$6.50", 
+    image_url: "/images/foto10.webp",
+    category: "Coffee",
+    sizes: "Single, Double",
+    special_instructions: "Less Hot, Extra Hot",
+    rating: 5.0,
+    is_signature: true,
+    reviews: [
+      { id: "r1", author: "Budi", rating: 5, comment: "Espresso terbaik di kota, crema-nya tebal dan tidak terlalu asam." },
+      { id: "r2", author: "Andi", rating: 5, comment: "Sangat mantap, harum sekali kopinya. Pekat luar biasa." }
+    ]
+  },
+  { 
+    id: "2", 
+    name: "Vanilla Cloud Latte", 
+    description: "Smooth espresso blended with creamy milk and cold-pressed vanilla bean syrup.", 
+    price: "$8.40", 
+    image_url: "/images/foto11.webp",
+    category: "Specialties",
+    sizes: "Regular, Large",
+    special_instructions: "Less Sweet, Less Ice, Oatmilk",
+    rating: 4.8,
+    is_signature: true,
+    reviews: [
+      { id: "r3", author: "Citra", rating: 5, comment: "Sangat suka foam vanilla-nya yang creamy, manisnya pas." },
+      { id: "r4", author: "Dewi", rating: 4, comment: "Enak banget, tapi kalau buat saya agak kemanisan dikit. Tinggal minta less sweet lain kali." }
+    ]
+  },
+  { 
+    id: "3", 
+    name: "Matcha Harmony", 
+    description: "Japanese matcha whisked with silky steamed milk.", 
+    price: "$9.80", 
+    image_url: "/images/foto12.webp",
+    category: "Non-Coffee",
+    sizes: "Regular, Large",
+    special_instructions: "Less Sweet, Less Ice, Soymilk",
+    rating: 4.9,
+    is_signature: false,
+    reviews: [
+      { id: "r5", author: "Eka", rating: 5, comment: "Matcha-nya kerasa otentik Jepang, harum daun teh asli, tidak dominan manis susu." },
+      { id: "r6", author: "Farhan", rating: 4, comment: "Enak bgt, rasanya balance antara earthy dan sweet." }
+    ]
+  },
+  { 
+    id: "4", 
+    name: "Blueberry Muffin", 
+    description: "Freshly baked muffin bursting with plump blueberries and a crumble top.", 
+    price: "$6.20", 
+    image_url: "/images/foto13.webp",
+    category: "Pastries",
+    sizes: "One Size",
+    special_instructions: "Warm It Up",
+    rating: 4.7,
+    is_signature: false,
+    reviews: [
+      { id: "r7", author: "Gita", rating: 5, comment: "Muffin disajikan hangat, blueberry-nya melimpah dan crumble-nya renyah." },
+      { id: "r8", author: "Hadi", rating: 4, comment: "Sangat lembut bagian dalamnya, cocok banget dimakan bareng kopi hitam." }
+    ]
+  }
 ];
 
 const DEFAULT_GALLERY_ITEMS = [
@@ -94,6 +155,7 @@ export default function AdminDashboard() {
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
   const [currentMenuEdit, setCurrentMenuEdit] = useState<any | null>(null);
+  const [defaultIsSignature, setDefaultIsSignature] = useState(false);
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
   const [currentGalleryEdit, setCurrentGalleryEdit] = useState<any | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
@@ -304,14 +366,33 @@ export default function AdminDashboard() {
 
     try {
       setUploadProgress(prev => ({ ...prev, [uploadKey]: 5 }));
-      const fileExt = file.name.split(".").pop();
+      
+      let fileToUpload = file;
+      
+      // Perform client-side browser image compression before uploading
+      if (file.type.startsWith("image/")) {
+        try {
+          const compressionOptions = {
+            maxSizeMB: 0.8, // Compress to max 800KB
+            maxWidthOrHeight: 1200, // Max dimension
+            useWebWorker: true,
+          };
+          console.log(`Original file size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+          fileToUpload = (await imageCompression(file, compressionOptions)) as any;
+          console.log(`Compressed file size: ${(fileToUpload.size / 1024 / 1024).toFixed(2)} MB`);
+        } catch (compErr) {
+          console.error("Browser image compression failed, using original file:", compErr);
+        }
+      }
+
+      const fileExt = fileToUpload.name ? fileToUpload.name.split(".").pop() : "webp";
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 
       setUploadProgress(prev => ({ ...prev, [uploadKey]: 25 }));
       const { error: uploadError } = await supabase.storage
         .from("coffee-assets")
-        .upload(filePath, file);
+        .upload(filePath, fileToUpload);
 
       if (uploadError) throw uploadError;
 
@@ -351,6 +432,11 @@ export default function AdminDashboard() {
     const price = formData.get("price") as string;
     const sort_order = parseInt(formData.get("sort_order") as string || "0");
     const imageFile = formData.get("image_file") as File;
+    const category = formData.get("category") as string || "Coffee";
+    const sizes = formData.get("sizes") as string || "Regular, Large";
+    const special_instructions = formData.get("special_instructions") as string || "";
+    const rating = parseFloat(formData.get("rating") as string || "5.0");
+    const is_signature = formData.get("is_signature") === "on";
 
     if (!name || !price || !description) {
       showFeedback("error", "mohon lengkapi nama, harga, dan deskripsi.");
@@ -370,7 +456,10 @@ export default function AdminDashboard() {
         // Local Demo Mode
         const localItem = {
           id: currentMenuEdit?.id || String(Date.now()),
-          name, description, price, sort_order, image_url: imageUrl
+          name, description, price, sort_order, image_url: imageUrl,
+          category, sizes, special_instructions, rating,
+          reviews: currentMenuEdit?.reviews || [],
+          is_signature
         };
         if (currentMenuEdit) {
           setMenuItems(prev => prev.map(item => item.id === currentMenuEdit.id ? localItem : item));
@@ -382,7 +471,10 @@ export default function AdminDashboard() {
         return;
       }
 
-      const dbData = { name, description, price, sort_order, image_url: imageUrl };
+      const dbData = { 
+        name, description, price, sort_order, image_url: imageUrl,
+        category, sizes, special_instructions, rating, is_signature
+      };
 
       if (currentMenuEdit) {
         const { error } = await supabase
@@ -1193,77 +1285,164 @@ export default function AdminDashboard() {
 
           {/* TAB OPTION C: MENU MANAGER */}
           {activeTab === "menu" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[3px] border-black pb-5 gap-4">
-                <div className="text-left">
-                  <h2 className="text-2xl font-black uppercase tracking-tighter">Signature Menu</h2>
-                  <p className="text-xs text-stone-600 font-bold uppercase tracking-wide mt-1">Kelola item menu eksklusif yang muncul di landing page.</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setCurrentMenuEdit(null);
-                    setIsMenuModalOpen(true);
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-[#E7F672] text-black border-[3px] border-black font-black uppercase text-xs tracking-wider py-2.5 px-5 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all self-start sm:self-center"
-                >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
-                  <span>Tambah Menu</span>
-                </button>
-              </div>
-
-              {/* Menu grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {menuItems.map((item) => (
-                  <div 
-                    key={item.id}
-                    className="border-[3px] border-black rounded-none p-4 flex gap-4 bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] duration-150"
-                  >
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-none border-[3px] border-black bg-stone-100">
-                      <Image
-                        src={item.image_url || "/placeholder.svg"}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
+            <div className="space-y-12">
+              
+              {/* SUBSECTION 1: MENU SIGNATURE BERANDA */}
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[3px] border-black pb-4 gap-4">
+                  <div className="text-left">
+                    <div className="inline-block bg-black text-[#FF6B8B] font-black text-[9px] uppercase tracking-widest px-2.5 py-1 mb-1 border-2 border-black">
+                      Homepage Block
                     </div>
-                    
-                    <div className="flex-grow flex flex-col justify-between">
-                      <div className="space-y-1.5 text-left">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-sm font-black uppercase tracking-tight text-black line-clamp-1">{item.name}</h3>
-                          <span className="text-xs font-black text-black bg-[#E7F672] border-[2px] border-black py-0.5 px-2 rounded-none whitespace-nowrap">{item.price}</span>
-                        </div>
-                        <p className="text-[10px] text-stone-600 leading-relaxed font-bold line-clamp-2">{item.description}</p>
-                      </div>
-
-                      {/* Row Actions */}
-                      <div className="flex items-center justify-end gap-2 border-t-[2px] border-black pt-3 mt-3">
-                        <button
-                          onClick={() => {
-                            setCurrentMenuEdit(item);
-                            setIsMenuModalOpen(true);
-                          }}
-                          className="rounded-none border-[2px] border-black bg-[#F1EEDC] text-black font-black uppercase text-[10px] py-1 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1"
-                        >
-                          <Edit3 className="w-3 h-3 stroke-[2.5]" />
-                          <span>Ubah</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMenu(item.id)}
-                          className="rounded-none border-[2px] border-black bg-white text-red-600 font-black uppercase text-[10px] py-1 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 hover:text-white hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1"
-                        >
-                          <Trash2 className="w-3 h-3 stroke-[2.5]" />
-                          <span>Hapus</span>
-                        </button>
-                      </div>
-                    </div>
+                    <h2 className="text-xl font-black uppercase tracking-tighter">1. Menu Signature Beranda</h2>
+                    <p className="text-[11px] text-stone-600 font-bold uppercase tracking-wide mt-0.5">Sajian menu premium khusus yang ditampilkan di bagian "Signature Menu" Beranda.</p>
                   </div>
-                ))}
+                  <button
+                    onClick={() => {
+                      setDefaultIsSignature(true);
+                      setCurrentMenuEdit(null);
+                      setIsMenuModalOpen(true);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 bg-[#E7F672] text-black border-[3px] border-black font-black uppercase text-xs tracking-wider py-2.5 px-5 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all self-start sm:self-center"
+                  >
+                    <Plus className="w-4 h-4 stroke-[2.5]" />
+                    <span>Tambah Menu Signature</span>
+                  </button>
+                </div>
+
+                {/* Menu grid for signatures */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {menuItems.filter((item) => item.is_signature).map((item) => (
+                    <div 
+                      key={item.id}
+                      className="border-[3px] border-black rounded-none p-4 flex gap-4 bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] duration-150"
+                    >
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-none border-[3px] border-black bg-stone-100">
+                        <Image
+                          src={item.image_url || "/placeholder.svg"}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      
+                      <div className="flex-grow flex flex-col justify-between">
+                        <div className="space-y-1.5 text-left">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="text-sm font-black uppercase tracking-tight text-black line-clamp-1">{item.name}</h3>
+                            <span className="text-xs font-black text-black bg-[#E7F672] border-[2px] border-black py-0.5 px-2 rounded-none whitespace-nowrap">{item.price}</span>
+                          </div>
+                          <p className="text-[10px] text-stone-600 leading-relaxed font-bold line-clamp-2">{item.description}</p>
+                        </div>
+
+                        {/* Row Actions */}
+                        <div className="flex items-center justify-end gap-2 border-t-[2px] border-black pt-3 mt-3">
+                          <button
+                            onClick={() => {
+                              setCurrentMenuEdit(item);
+                              setIsMenuModalOpen(true);
+                            }}
+                            className="rounded-none border-[2px] border-black bg-[#F1EEDC] text-black font-black uppercase text-[10px] py-1 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1"
+                          >
+                            <Edit3 className="w-3 h-3 stroke-[2.5]" />
+                            <span>Ubah</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMenu(item.id)}
+                            className="rounded-none border-[2px] border-black bg-white text-red-600 font-black uppercase text-[10px] py-1 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 hover:text-white hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3 stroke-[2.5]" />
+                            <span>Hapus</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {menuItems.filter((item) => item.is_signature).length === 0 && (
+                  <div className="text-center py-16 text-stone-500 font-bold uppercase border-[3px] border-dashed border-black bg-white shadow-inner">Belum ada item menu Signature. Klik "Tambah Menu Signature" di atas.</div>
+                )}
               </div>
 
-              {menuItems.length === 0 && (
-                <div className="text-center py-20 text-stone-500 font-bold uppercase border-[3px] border-dashed border-black">Belum ada item menu yang tersimpan. Klik "Tambah Menu" untuk membuat baru.</div>
-              )}
+              {/* SUBSECTION 2: DAFTAR MENU HALAMAN UTAMA */}
+              <div className="space-y-6 pt-10 border-t-4 border-dashed border-black/25">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[3px] border-black pb-4 gap-4">
+                  <div className="text-left">
+                    <div className="inline-block bg-black text-[#6BE8FF] font-black text-[9px] uppercase tracking-widest px-2.5 py-1 mb-1 border-2 border-black">
+                      Public Dedicated Page
+                    </div>
+                    <h2 className="text-xl font-black uppercase tracking-tighter">2. Daftar Menu Halaman Utama (/menu)</h2>
+                    <p className="text-[11px] text-stone-600 font-bold uppercase tracking-wide mt-0.5">Sajian menu umum kedai yang ditampilkan secara lengkap di halaman khusus `/menu`.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setDefaultIsSignature(false);
+                      setCurrentMenuEdit(null);
+                      setIsMenuModalOpen(true);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 bg-[#E7F672] text-black border-[3px] border-black font-black uppercase text-xs tracking-wider py-2.5 px-5 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all self-start sm:self-center"
+                  >
+                    <Plus className="w-4 h-4 stroke-[2.5]" />
+                    <span>Tambah Menu Umum</span>
+                  </button>
+                </div>
+
+                {/* Menu grid for general items */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {menuItems.filter((item) => !item.is_signature).map((item) => (
+                    <div 
+                      key={item.id}
+                      className="border-[3px] border-black rounded-none p-4 flex gap-4 bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] duration-150"
+                    >
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-none border-[3px] border-black bg-stone-100">
+                        <Image
+                          src={item.image_url || "/placeholder.svg"}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      
+                      <div className="flex-grow flex flex-col justify-between">
+                        <div className="space-y-1.5 text-left">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="text-sm font-black uppercase tracking-tight text-black line-clamp-1">{item.name}</h3>
+                            <span className="text-xs font-black text-black bg-[#E7F672] border-[2px] border-black py-0.5 px-2 rounded-none whitespace-nowrap">{item.price}</span>
+                          </div>
+                          <p className="text-[10px] text-stone-600 leading-relaxed font-bold line-clamp-2">{item.description}</p>
+                        </div>
+
+                        {/* Row Actions */}
+                        <div className="flex items-center justify-end gap-2 border-t-[2px] border-black pt-3 mt-3">
+                          <button
+                            onClick={() => {
+                              setCurrentMenuEdit(item);
+                              setIsMenuModalOpen(true);
+                            }}
+                            className="rounded-none border-[2px] border-black bg-[#F1EEDC] text-black font-black uppercase text-[10px] py-1 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1"
+                          >
+                            <Edit3 className="w-3 h-3 stroke-[2.5]" />
+                            <span>Ubah</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMenu(item.id)}
+                            className="rounded-none border-[2px] border-black bg-white text-red-600 font-black uppercase text-[10px] py-1 px-2.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 hover:text-white hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3 stroke-[2.5]" />
+                            <span>Hapus</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {menuItems.filter((item) => !item.is_signature).length === 0 && (
+                  <div className="text-center py-16 text-stone-500 font-bold uppercase border-[3px] border-dashed border-black bg-white shadow-inner">Belum ada item menu Umum. Klik "Tambah Menu Umum" di atas.</div>
+                )}
+              </div>
+
             </div>
           )}
 
@@ -1632,7 +1811,7 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleMenuSubmit} className="p-6 space-y-4 text-left">
+            <form onSubmit={handleMenuSubmit} className="p-6 space-y-4 text-left max-h-[75vh] overflow-y-auto">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-wider text-black">Nama Menu <span className="text-red-600 font-bold">*</span></label>
                 <input
@@ -1646,6 +1825,20 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-black">Kategori <span className="text-red-600 font-bold">*</span></label>
+                  <select
+                    name="category"
+                    defaultValue={currentMenuEdit?.category || "Coffee"}
+                    className="w-full bg-white border-[3px] border-black rounded-none p-3 px-4 text-xs text-black font-bold focus:outline-none focus:bg-yellow-50 appearance-none"
+                  >
+                    <option value="Coffee">Coffee</option>
+                    <option value="Non-Coffee">Non-Coffee</option>
+                    <option value="Pastries">Pastries</option>
+                    <option value="Specialties">Specialties</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-wider text-black">Harga <span className="text-red-600 font-bold">*</span></label>
                   <input
                     type="text"
@@ -1655,6 +1848,44 @@ export default function AdminDashboard() {
                     className="w-full bg-white border-[3px] border-black rounded-none p-3 px-4 text-xs text-black font-bold focus:outline-none focus:bg-yellow-50"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-black">Ukuran (Pisahkan dengan Koma) <span className="text-red-600 font-bold">*</span></label>
+                  <input
+                    type="text"
+                    name="sizes"
+                    defaultValue={currentMenuEdit?.sizes || "Regular, Large"}
+                    placeholder="Contoh: Regular, Large"
+                    className="w-full bg-white border-[3px] border-black rounded-none p-3 px-4 text-xs text-black font-bold focus:outline-none focus:bg-yellow-50"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-black">Rating Awal (1.0 - 5.0)</label>
+                  <input
+                    type="text"
+                    name="rating"
+                    defaultValue={currentMenuEdit?.rating || "5.0"}
+                    placeholder="Contoh: 4.8"
+                    className="w-full bg-white border-[3px] border-black rounded-none p-3 px-4 text-xs text-black font-bold focus:outline-none focus:bg-yellow-50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-black">Preset Instruksi Khusus (Pisahkan dengan Koma)</label>
+                  <input
+                    type="text"
+                    name="special_instructions"
+                    defaultValue={currentMenuEdit?.special_instructions || "Less Sugar, Less Ice"}
+                    placeholder="Contoh: Less Sugar, Less Ice"
+                    className="w-full bg-white border-[3px] border-black rounded-none p-3 px-4 text-xs text-black font-bold focus:outline-none focus:bg-yellow-50"
+                  />
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-wider text-black">Indeks Sort order</label>
                   <input
@@ -1667,11 +1898,25 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Checkbox Toggle for Signature Flag */}
+              <div className="flex items-center gap-3 bg-white border-[3px] border-black p-3.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <input
+                  type="checkbox"
+                  id="is_signature"
+                  name="is_signature"
+                  defaultChecked={currentMenuEdit ? !!currentMenuEdit.is_signature : defaultIsSignature}
+                  className="h-5 w-5 rounded-none border-[3px] border-black text-black bg-[#E7F672] focus:ring-0 cursor-pointer"
+                />
+                <label htmlFor="is_signature" className="text-xs font-black uppercase tracking-wider text-black cursor-pointer select-none">
+                  Tampilkan di Menu Signature Beranda
+                </label>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-wider text-black">Deskripsi Singkat <span className="text-red-600 font-bold">*</span></label>
                 <textarea
                   name="description"
-                  rows={3}
+                  rows={2}
                   defaultValue={currentMenuEdit?.description || ""}
                   placeholder="Karakteristik rasa, biji kopi, rasa yang dominan..."
                   className="w-full bg-white border-[3px] border-black rounded-none p-3 px-4 text-xs text-black font-bold focus:outline-none focus:bg-yellow-50 resize-none"
