@@ -13,6 +13,7 @@ const DEFAULT_MENU_ITEMS = [
     description: "Rich and robust double-shot espresso brewed from our premium house blend.",
     price: "$6.50",
     image: "/images/foto10.webp",
+    is_signature: true,
   },
   {
     id: "static_2",
@@ -20,6 +21,7 @@ const DEFAULT_MENU_ITEMS = [
     description: "Smooth espresso blended with creamy milk and cold-pressed vanilla bean syrup.",
     price: "$8.40",
     image: "/images/foto11.webp",
+    is_signature: true,
   },
   {
     id: "static_3",
@@ -27,6 +29,7 @@ const DEFAULT_MENU_ITEMS = [
     description: "Japanese matcha whisked with silky steamed milk.",
     price: "$9.80",
     image: "/images/foto12.webp",
+    is_signature: false,
   },
   {
     id: "static_4",
@@ -34,11 +37,12 @@ const DEFAULT_MENU_ITEMS = [
     description: "Freshly baked muffin bursting with plump blueberries and a crumble top.",
     price: "$6.20",
     image: "/images/foto13.webp",
+    is_signature: false,
   },
 ];
 
 export function CollectionSection() {
-  const [menuItems, setMenuItems] = useState(DEFAULT_MENU_ITEMS);
+  const [menuItems, setMenuItems] = useState(DEFAULT_MENU_ITEMS.filter(item => item.is_signature));
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) return;
@@ -48,6 +52,7 @@ export function CollectionSection() {
         const { data, error } = await supabase!
           .from("menu_items")
           .select("*")
+          .eq("is_signature", true)
           .order("sort_order", { ascending: true });
 
         if (error) throw error;
@@ -58,8 +63,12 @@ export function CollectionSection() {
             description: item.description,
             price: item.price,
             image: item.image_url,
+            is_signature: true,
           }));
           setMenuItems(mapped);
+        } else {
+          // Fallback if database has no signatures yet
+          setMenuItems(DEFAULT_MENU_ITEMS.filter(item => item.is_signature));
         }
       } catch (err) {
         console.warn("Failed to load menu items from Supabase, using default local assets:", err);
@@ -195,7 +204,7 @@ export function CollectionSection() {
           className="mt-16 text-center"
         >
           <Link
-            href="#gallery"
+            href="/menu"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#0f5233] hover:bg-[#0a3d24] text-white dark:bg-emerald-600 dark:hover:bg-emerald-700 font-sans font-semibold text-sm md:text-base shadow-lg shadow-[#0f5233]/10 hover:shadow-xl hover:shadow-[#0f5233]/20 hover:scale-105 active:scale-95 transition-all duration-300 group/btn"
           >
             Explore Our Menu

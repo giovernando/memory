@@ -143,7 +143,7 @@ export function Header() {
           {/* Navigation Links */}
           <nav className="flex items-center gap-8 lg:gap-12">
             <Link
-              href="/#gallery"
+              href="/menu"
               className="text-[#2F3E30] font-sans font-semibold text-sm lg:text-base transition-all duration-300 hover:opacity-80 relative group py-1"
             >
               Menu
@@ -209,7 +209,7 @@ export function Header() {
                 <nav className="flex flex-col items-center gap-7 w-full">
                   <motion.div variants={menuItemVariants} className="text-center">
                     <Link
-                      href="/#gallery"
+                      href="/menu"
                       className="text-xl font-bold text-[#2F3E30] transition-colors hover:opacity-60 block"
                       onClick={() => setIsMenuOpen(false)}
                     >
