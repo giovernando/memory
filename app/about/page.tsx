@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import {
   Coffee, Leaf, Award, Heart, ShieldCheck, Sparkles,
   ArrowRight, Landmark, Trees, Compass, Calendar, HelpCircle
@@ -12,7 +12,7 @@ import { FooterSection } from "@/components/sections/footer-section";
 import { CoffeeImage } from "@/components/coffee-image";
 
 // Framer motion animation configs
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: (custom: number) => ({
     opacity: 1,
@@ -197,8 +197,8 @@ export default function AboutPage() {
       {/* 3. INTERACTIVE HERITAGE TIMELINE (Perjalanan Kami) */}
       <section className="py-24 bg-[#EAE7DF] border-y border-[#2F3E30]/5 relative overflow-hidden">
         {/* Floating background decorative coffee bean */}
-        <div className="absolute -top-10 left-10 w-24 h-24 pointer-events-none opacity-5 select-none" style={{ backgroundImage: "url('/images/bean.png')", bgSize: "contain" }} />
-        <div className="absolute -bottom-10 right-10 w-24 h-24 pointer-events-none opacity-5 select-none rotate-45" style={{ backgroundImage: "url('/images/bean.png')", bgSize: "contain" }} />
+        <div className="absolute -top-10 left-10 w-24 h-24 pointer-events-none opacity-5 select-none" style={{ backgroundImage: "url('/images/bean.png')", backgroundSize: "contain" }} />
+        <div className="absolute -bottom-10 right-10 w-24 h-24 pointer-events-none opacity-5 select-none rotate-45" style={{ backgroundImage: "url('/images/bean.png')", backgroundSize: "contain" }} />
 
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
