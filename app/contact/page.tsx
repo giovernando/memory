@@ -263,7 +263,7 @@ export default function ContactPage() {
                 <ArrowRight className="w-4 h-4 text-[#738A75]" />
               </a>
               <a
-                href="/#reserve"
+                href="/reservation"
                 className="px-8 py-3.5 bg-transparent text-white border border-white/35 hover:bg-white/10 hover:border-white text-xs font-black rounded-full hover:scale-105 active:scale-95 transition-all duration-300"
               >
                 Reservasi Meja Harian

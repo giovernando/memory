@@ -174,7 +174,7 @@ export function Header() {
 
           {/* Reservasi Button */}
           <Link
-            href="/#reserve"
+            href="/reservation"
             className="px-8 py-3 rounded-full bg-[#738A75] hover:bg-[#5E7560] text-white font-sans font-semibold text-sm lg:text-base shadow-md shadow-[#738A75]/10 hover:scale-105 active:scale-95 transition-all duration-300 block"
           >
             Reservasi
@@ -245,7 +245,7 @@ export function Header() {
                   </motion.div>
                   <motion.div variants={menuItemVariants} className="w-full mt-2">
                     <Link
-                      href="/#reserve"
+                      href="/reservation"
                       className="w-full py-4 rounded-full bg-[#738A75] text-[#F4F1EA] flex items-center justify-center gap-2 font-bold text-base shadow-md shadow-[#738A75]/15 hover:bg-[#617763] transition-colors duration-300"
                       onClick={() => setIsMenuOpen(false)}
                     >
