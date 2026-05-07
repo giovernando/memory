@@ -130,13 +130,52 @@ const DEFAULT_HOMEPAGE_CARDS = [
   { key: "card_4", title: "Night Radiance", description: "Illuminating the dark with warm energy-efficient lighting", tag: "architecture", image_url: "/images/foto24.webp", sort_order: 4 }
 ];
 
+const DEFAULT_RESERVATIONS = [
+  {
+    id: "res1",
+    name: "Gio Vernando",
+    email: "gio@example.com",
+    phone: "+62 812-3456-7890",
+    date: "2026-05-10",
+    time: "14:00 WIB",
+    guests: 4,
+    notes: "Minta meja dekat jendela kaca besar yang banyak tanaman hijau.",
+    status: "approved",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "res2",
+    name: "Dina Mariana",
+    email: "dina@example.com",
+    phone: "+62 819-8765-4321",
+    date: "2026-05-12",
+    time: "19:00 WIB",
+    guests: 2,
+    notes: "Acara perayaan hari jadian. Sangat senang jika bisa disiapkan lilin.",
+    status: "pending",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "res3",
+    name: "Budi Santoso",
+    email: "budi@example.com",
+    phone: "+62 857-1122-3344",
+    date: "2026-05-09",
+    time: "10:00 WIB",
+    guests: 6,
+    notes: "Pertemuan bisnis kecil, tolong sediakan colokan listrik di sudut tenang.",
+    status: "rejected",
+    created_at: new Date().toISOString()
+  }
+];
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [dbStatus, setDbStatus] = useState<"checking" | "connected" | "offline">("checking");
-  const [activeTab, setActiveTab] = useState<"overview" | "menu" | "gallery" | "sections" | "countdown">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "menu" | "gallery" | "sections" | "countdown" | "reservations">("overview");
   
   // Data States
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -144,6 +183,7 @@ export default function AdminDashboard() {
   const [techSlots, setTechSlots] = useState<any[]>(DEFAULT_TECH_SLOTS);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [homepageCards, setHomepageCards] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
 
   // Countdown Config states
   const [countdownTitle, setCountdownTitle] = useState("Festival Kopi Spesial");
@@ -179,6 +219,14 @@ export default function AdminDashboard() {
         setFeaturedProducts(DEFAULT_FEATURED_PRODUCTS);
         setHomepageCards(DEFAULT_HOMEPAGE_CARDS);
 
+        // Load local reservations
+        const localRes = localStorage.getItem("coffee_local_reservations");
+        if (localRes) {
+          setReservations(JSON.parse(localRes));
+        } else {
+          setReservations(DEFAULT_RESERVATIONS);
+        }
+
         // Offline Auth fallback
         const auth = localStorage.getItem("coffee_admin_auth");
         if (auth === "true") {
@@ -213,6 +261,14 @@ export default function AdminDashboard() {
         setGalleryItems(DEFAULT_GALLERY_ITEMS);
         setFeaturedProducts(DEFAULT_FEATURED_PRODUCTS);
         setHomepageCards(DEFAULT_HOMEPAGE_CARDS);
+
+        // Load local reservations fallback
+        const localRes = localStorage.getItem("coffee_local_reservations");
+        if (localRes) {
+          setReservations(JSON.parse(localRes));
+        } else {
+          setReservations(DEFAULT_RESERVATIONS);
+        }
 
         const auth = localStorage.getItem("coffee_admin_auth");
         if (auth === "true") {
@@ -281,6 +337,22 @@ export default function AdminDashboard() {
         });
         setHomepageCards(mappedCards);
       }
+
+      // 4. Fetch Reservations
+      const { data: resData, error: resErr } = await supabase
+        .from("reservations")
+        .select("*")
+        .order("date", { ascending: true })
+        .order("time", { ascending: true });
+      
+      if (!resErr && resData) {
+        setReservations(resData);
+      } else {
+        console.warn("Reservations fetch error:", resErr);
+        const localRes = localStorage.getItem("coffee_local_reservations");
+        setReservations(localRes ? JSON.parse(localRes) : DEFAULT_RESERVATIONS);
+      }
+
     } catch (err) {
       console.error("Failed loading data from Supabase:", err);
       showFeedback("error", "gagal sinkronisasi data dengan database.");
@@ -621,6 +693,65 @@ export default function AdminDashboard() {
       loadAllData();
     } catch (err: any) {
       showFeedback("error", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Reservation Actions: Approved / Rejected / Reverted to Pending
+  const handleReservationStatus = async (id: string, newStatus: "approved" | "rejected" | "pending") => {
+    setLoading(true);
+    try {
+      if (dbStatus !== "connected" || !supabase) {
+        // Local Storage Mock
+        const updated = reservations.map(r => r.id === id ? { ...r, status: newStatus } : r);
+        setReservations(updated);
+        localStorage.setItem("coffee_local_reservations", JSON.stringify(updated));
+        showFeedback("success", `[Lokal] Status reservasi diperbarui menjadi ${newStatus}.`);
+        return;
+      }
+
+      const { error } = await supabase
+        .from("reservations")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+      showFeedback("success", `Status reservasi berhasil diubah menjadi ${newStatus}.`);
+      loadAllData();
+    } catch (err: any) {
+      console.error("Failed to update reservation status:", err);
+      showFeedback("error", err.message || "Gagal mengubah status reservasi.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete Reservation
+  const handleDeleteReservation = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus data reservasi ini secara permanen?")) return;
+    setLoading(true);
+    try {
+      if (dbStatus !== "connected" || !supabase) {
+        // Local Storage Mock
+        const updated = reservations.filter(r => r.id !== id);
+        setReservations(updated);
+        localStorage.setItem("coffee_local_reservations", JSON.stringify(updated));
+        showFeedback("success", "[Lokal] Data reservasi berhasil dihapus.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("reservations")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      showFeedback("success", "Data reservasi berhasil dihapus.");
+      loadAllData();
+    } catch (err: any) {
+      console.error("Failed to delete reservation:", err);
+      showFeedback("error", err.message || "Gagal menghapus data reservasi.");
     } finally {
       setLoading(false);
     }
@@ -1002,6 +1133,21 @@ export default function AdminDashboard() {
               </div>
               <ChevronRight className={`w-4 h-4 stroke-[2.5] ${activeTab === "countdown" ? "translate-x-1" : ""}`} />
             </button>
+
+            <button
+              onClick={() => setActiveTab("reservations")}
+              className={`w-full flex items-center justify-between p-3.5 px-4 rounded-none border-2 transition-all duration-150 text-xs font-black uppercase tracking-wider ${
+                activeTab === "reservations" 
+                  ? "bg-[#FFA8E2] text-black border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -translate-x-0.5 -translate-y-0.5" 
+                  : "text-stone-600 border-transparent hover:border-black hover:bg-[#F1EEDC]"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Calendar className="w-4 h-4 stroke-[2.5]" />
+                <span>Reservasi Meja</span>
+              </div>
+              <ChevronRight className={`w-4 h-4 stroke-[2.5] ${activeTab === "reservations" ? "translate-x-1" : ""}`} />
+            </button>
           </nav>
         </div>
 
@@ -1077,17 +1223,22 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Card 3: Total Section Slots Managed (Pastel Oranye) */}
-          <div className="border-4 border-black rounded-none p-5 bg-[#FFE1B1] shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between min-h-[120px]">
+          {/* Card 3: Total Reservations (Pastel Oranye) */}
+          <div 
+            onClick={() => setActiveTab("reservations")}
+            className="border-4 border-black rounded-none p-5 bg-[#FFE1B1] shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between min-h-[120px] cursor-pointer hover:scale-[1.01] transition-transform duration-100"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-black/70">Slots Gambar</span>
-              <Sliders className="w-5 h-5 text-black stroke-[2.5]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-black/70">Reservasi Meja</span>
+              <Calendar className="w-5 h-5 text-black stroke-[2.5]" />
             </div>
             <div className="mt-3">
               <span className="font-black text-4xl block text-black">
-                {String(techSlots.length + featuredProducts.length).padStart(2, "0")}
+                {String(reservations.length).padStart(2, "0")}
               </span>
-              <span className="text-[9px] font-black uppercase tracking-wider text-black/60">section images</span>
+              <span className="text-[9px] font-black uppercase tracking-wider text-black/60">
+                {reservations.filter((r) => r.status === "pending").length} pending / {reservations.filter((r) => r.status === "approved").length} approved
+              </span>
             </div>
           </div>
 
@@ -1279,6 +1430,137 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB OPTION F: RESERVATIONS MANAGER */}
+          {activeTab === "reservations" && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-[3px] border-black pb-4 gap-4">
+                <div className="text-left">
+                  <div className="inline-block bg-black text-[#FFA8E2] font-black text-[9px] uppercase tracking-widest px-2.5 py-1 mb-1 border-2 border-black">
+                    Customer Bookings
+                  </div>
+                  <h2 className="text-2xl font-black uppercase tracking-tighter">Reservasi Meja Pelanggan</h2>
+                  <p className="text-[11px] text-stone-600 font-bold uppercase tracking-wide mt-0.5">Daftar reservasi meja harian dari pelanggan. Setujui, tolak, atau hapus data reservasi secara real-time.</p>
+                </div>
+              </div>
+
+              {/* Statistics Summary */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="border-[3px] border-black p-4 bg-amber-100 text-left">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-600 block mb-1">Menunggu</span>
+                  <span className="text-3xl font-black text-amber-700">{reservations.filter((r) => r.status === "pending").length}</span>
+                </div>
+                <div className="border-[3px] border-black p-4 bg-green-100 text-left">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-600 block mb-1">Disetujui</span>
+                  <span className="text-3xl font-black text-green-700">{reservations.filter((r) => r.status === "approved").length}</span>
+                </div>
+                <div className="border-[3px] border-black p-4 bg-red-100 text-left">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-600 block mb-1">Ditolak</span>
+                  <span className="text-3xl font-black text-red-700">{reservations.filter((r) => r.status === "rejected").length}</span>
+                </div>
+              </div>
+
+              {/* Reservations List/Table */}
+              <div className="space-y-6">
+                {reservations.length === 0 ? (
+                  <div className="text-center py-16 text-stone-500 font-bold uppercase border-[3px] border-dashed border-black bg-white shadow-inner">
+                    Belum ada data reservasi masuk.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-5">
+                    {reservations.map((res) => (
+                      <div 
+                        key={res.id}
+                        className={`border-[3px] border-black rounded-none p-5 bg-white shadow-[6px_6px_0px_0px_rgba(4,4,4,1)] flex flex-col md:flex-row justify-between gap-5 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 ${
+                          res.status === "approved" ? "border-l-[12px] border-l-green-500" : 
+                          res.status === "rejected" ? "border-l-[12px] border-l-red-500" : 
+                          "border-l-[12px] border-l-amber-500"
+                        }`}
+                      >
+                        {/* Left side: Reservation details */}
+                        <div className="space-y-4 flex-grow text-left">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-lg font-black uppercase tracking-tight text-black">{res.name}</h3>
+                            <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 border-[2px] border-black ${
+                              res.status === "approved" ? "bg-green-300 text-green-900" :
+                              res.status === "rejected" ? "bg-red-300 text-red-900" :
+                              "bg-amber-300 text-amber-900"
+                            }`}>
+                              {res.status === "approved" ? "Disetujui" : res.status === "rejected" ? "Ditolak" : "Pending"}
+                            </span>
+                            <span className="text-[10px] font-mono text-stone-500 bg-stone-100 px-2.5 py-0.5 border border-stone-200">
+                              Diterima: {res.created_at ? new Date(res.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "N/A"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-xs font-bold uppercase tracking-wide text-stone-700 bg-stone-50 p-4 border-[2px] border-black">
+                            <div>
+                              <span className="text-[9px] text-stone-400 font-extrabold block mb-0.5">Email</span>
+                              <span className="text-black break-all font-bold">{res.email}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-stone-400 font-extrabold block mb-0.5">Telepon / WA</span>
+                              <span className="text-black font-bold">{res.phone}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-stone-400 font-extrabold block mb-0.5">Waktu Kunjungan</span>
+                              <span className="text-black font-bold">{res.date} @ {res.time}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-stone-400 font-extrabold block mb-0.5">Kapasitas</span>
+                              <span className="text-black font-bold">{res.guests} Orang / Tamu</span>
+                            </div>
+                          </div>
+
+                          {res.notes && (
+                            <div className="text-xs bg-yellow-50 border-[2px] border-black p-3.5 rounded-none">
+                              <span className="text-[9px] text-stone-500 font-black uppercase block mb-1">Catatan Khusus Pelanggan:</span>
+                              <p className="text-stone-800 leading-relaxed font-bold italic">"{res.notes}"</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right side: Action buttons */}
+                        <div className="flex flex-row md:flex-col justify-center items-stretch gap-2.5 shrink-0 min-w-[140px] border-t-[2px] md:border-t-0 md:border-l-[2px] border-black/10 pt-4 md:pt-0 md:pl-4">
+                          {res.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => handleReservationStatus(res.id, "approved")}
+                                className="flex-grow rounded-none border-[2px] border-black bg-green-400 hover:bg-green-500 text-black font-black uppercase text-[10px] py-2.5 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-1.5"
+                              >
+                                <span>Setujui</span>
+                              </button>
+                              <button
+                                onClick={() => handleReservationStatus(res.id, "rejected")}
+                                className="flex-grow rounded-none border-[2px] border-black bg-red-400 hover:bg-red-500 text-black font-black uppercase text-[10px] py-2.5 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-1.5"
+                              >
+                                <span>Tolak</span>
+                              </button>
+                            </>
+                          )}
+                          {res.status !== "pending" && (
+                            <button
+                              onClick={() => handleReservationStatus(res.id, "pending")}
+                              className="rounded-none border-[2px] border-black bg-stone-200 hover:bg-stone-300 text-black font-black uppercase text-[10px] py-2.5 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-1.5"
+                            >
+                              <span>Revert Ke Pending</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteReservation(res.id)}
+                            className="rounded-none border-[2px] border-black bg-white text-red-600 hover:bg-red-500 hover:text-white font-black uppercase text-[10px] py-2.5 px-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-1.5"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                            <span>Hapus Permanen</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

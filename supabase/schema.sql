@@ -132,3 +132,27 @@ ALTER TABLE public.menu_items ADD COLUMN IF NOT EXISTS rating numeric DEFAULT 5.
 ALTER TABLE public.menu_items ADD COLUMN IF NOT EXISTS reviews jsonb DEFAULT '[]'::jsonb;
 ALTER TABLE public.menu_items ADD COLUMN IF NOT EXISTS is_signature boolean DEFAULT false NOT NULL;
 
+
+-- 7. Create Reservations Table
+create table if not exists public.reservations (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  email text not null,
+  phone text not null,
+  date date not null,
+  time text not null,
+  guests integer not null,
+  notes text,
+  status text default 'pending' not null, -- 'pending', 'approved', 'rejected'
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table public.reservations enable row level security;
+
+-- Public Select, Insert, and Write policies (Selaras dengan tabel menu_items dan gallery_items di kedai ini)
+create policy "Allow Public Select Reservations" on public.reservations for select using (true);
+create policy "Allow Public Insert Reservations" on public.reservations for insert with check (true);
+create policy "Allow Public Write Reservations" on public.reservations for all using (true);
+
+

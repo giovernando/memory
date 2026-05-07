@@ -8,7 +8,7 @@ const footerLinks = [
   { label: "Home", href: "#hero" },
   { label: "About", href: "/about" },
   { label: "Menu", href: "#gallery" },
-  { label: "Reservation", href: "#reserve" },
+  { label: "Reservation", href: "/reservation" },
   { label: "Blog", href: "#" },
   { label: "Terms & Conditions", href: "#" },
   { label: "Privacy Policy", href: "#" },

@@ -161,7 +161,7 @@ export default function AboutPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/#reserve"
+                href="/reservation"
                 className="px-8 py-3.5 rounded-full bg-white/10 hover:bg-white/15 text-white font-semibold backdrop-blur-md border border-white/20 hover:scale-105 active:scale-95 transition-all duration-300"
               >
                 Reservasi Meja
@@ -414,7 +414,7 @@ export default function AboutPage() {
                 <ArrowRight className="w-4 h-4 text-[#738A75]" />
               </Link>
               <Link
-                href="/#reserve"
+                href="/reservation"
                 className="px-8 py-3.5 bg-transparent text-white border border-white/35 hover:bg-white/10 hover:border-white text-sm font-extrabold rounded-full hover:scale-105 active:scale-95 transition-all duration-300"
               >
                 Booking Tempat
