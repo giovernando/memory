@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const isDownload = searchParams.get("download") === "true";
 
     if (isDownload) {
-      return new NextResponse(result.buffer, {
+      return new NextResponse(new Uint8Array(result.buffer), {
         headers: {
           "Content-Type": "image/webp",
           "Content-Disposition": `attachment; filename="${result.fileName}"`,
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       fileName: result.fileName,
       mimeType: "image/webp",
       originalSize: `${(result.originalSize / 1024).toFixed(1)} KB`,
-      compressedSize: `${(result.compressedSize / 1024).toFixed(1)} KB`,
+      compressedSize: `${((result.compressedSize ?? 0) / 1024).toFixed(1)} KB`,
       savings: {
         bytesSaved,
         percentSaved: `${savingPercent}%`,

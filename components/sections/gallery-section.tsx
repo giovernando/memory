@@ -51,7 +51,7 @@ export function GallerySection() {
 
     async function loadCards() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from("section_images")
           .select("*")
           .eq("section", "homepage_gallery")

@@ -22,7 +22,7 @@ export function FeaturedProductsSection() {
 
     async function loadFeaturedImages() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from("section_images")
           .select("image_url")
           .eq("section", "featured_products")
