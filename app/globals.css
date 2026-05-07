@@ -3,6 +3,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ==========================================================================
+   CRITICAL CSS SEGMENT 1: Core Color Token Variable System
+   ========================================================================== */
 :root {
   --background: #FFFFFF;
   --foreground: #0A0A0A;
@@ -74,10 +77,18 @@
   --sidebar-ring: #FAFAFA;
 }
 
+/* ==========================================================================
+   CRITICAL CSS SEGMENT 2: Tailwind Theme Tokens and Definitions
+   ========================================================================== */
 @theme inline {
   --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-display: 'PP Editorial New', 'Times New Roman', serif;
+  
+  /* Registering Used Font-Utilities to guarantee correct mapping and fallbacks */
+  --font-tiemposHeadline: 'Tiempos Headline', 'Times New Roman', serif;
+  --font-manrope: 'Manrope', 'Inter', sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -116,19 +127,58 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ==========================================================================
+   CRITICAL CSS SEGMENT 3: Core Layout & Enforced Height Stability
+   ========================================================================== */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html, body {
+    min-height: 100vh;
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
-  
-  html {
-    scroll-behavior: smooth;
+
+  /* 
+     Layout Stability: Enforce full viewport-height container minimum immediately on paint
+     to eliminate vertical page jumping or element redrawing during client-side state hydration.
+  */
+  main, [role="main"] {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 }
 
+/* ==========================================================================
+   NON-CRITICAL CSS: Typography Declarations (font-display: swap)
+   ========================================================================== */
+@font-face {
+  font-family: 'PP Editorial New';
+  src: local('PP Editorial New'), local('Times New Roman'), serif;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tiempos Headline';
+  src: local('Tiempos Headline'), local('Times New Roman'), serif;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: local('Manrope'), local('Inter'), sans-serif;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   NON-CRITICAL CSS: Custom Animations, Transitions, Filters and FX Overlays
+   ========================================================================== */
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -202,6 +252,17 @@
   90% { transform: translate(-10%, 10%); }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -220,6 +281,10 @@
 
 .animate-scale-in {
   animation: scale-in 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.7s ease-out forwards;
 }
 
 .animation-delay-100 { animation-delay: 100ms; }
@@ -256,20 +321,4 @@
 
 .clip-diagonal-reverse {
   clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 100%);
-}
-
-/* Fade in animation for images */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(1.02);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.7s ease-out forwards;
 }

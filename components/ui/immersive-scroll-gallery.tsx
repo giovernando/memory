@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import React from "react";
+import Image from "next/image";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 
 // Types
@@ -112,10 +113,13 @@ const ImmersiveScrollGallery: React.FC<iImmersiveScrollGalleryProps> = ({
               className="absolute flex items-center justify-center w-full h-full top-0"
             >
               <div className={`relative ${IMAGE_STYLES[styleIndex]}`}>
-                <img
+                <Image
                   src={src}
                   alt={`Zoom image ${index + 1}`}
-                  className="object-cover w-full h-full"
+                  fill
+                  sizes="(max-width: 768px) 35vw, 25vw"
+                  className="object-cover"
+                  loading="lazy"
                 />
               </div>
             </motion.div>

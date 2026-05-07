@@ -239,6 +239,7 @@ export function TechnologySection() {
                 src={centerImages.center1}
                 alt="Modern architecture at sunrise"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
                 style={{
                   opacity: scrollProgress < 0.25 ? 1 : 1,
@@ -250,6 +251,7 @@ export function TechnologySection() {
                 src={centerImages.center2}
                 alt="Modern architecture in daylight"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="absolute inset-0 object-cover"
                 style={{
                   opacity: Math.max(0, Math.min(1, (scrollProgress - 0.1) / 0.2)),
@@ -262,6 +264,7 @@ export function TechnologySection() {
                 src={centerImages.center3}
                 alt="Modern architecture at dusk"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="absolute inset-0 object-cover"
                 style={{
                   opacity: Math.max(0, Math.min(1, (scrollProgress - 0.4) / 0.2)),
@@ -274,6 +277,7 @@ export function TechnologySection() {
                 src={centerImages.center4}
                 alt="Modern architecture at night"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="absolute inset-0 object-cover"
                 style={{
                   opacity: Math.max(0, Math.min(1, (scrollProgress - 0.7) / 0.2)),

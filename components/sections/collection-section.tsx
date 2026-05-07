@@ -43,9 +43,13 @@ const DEFAULT_MENU_ITEMS = [
 
 export function CollectionSection() {
   const [menuItems, setMenuItems] = useState(DEFAULT_MENU_ITEMS.filter(item => item.is_signature));
+  const [loading, setLoading] = useState(isSupabaseConfigured() && !!supabase);
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || !supabase) return;
+    if (!isSupabaseConfigured() || !supabase) {
+      setLoading(false);
+      return;
+    }
 
     async function loadMenu() {
       try {
@@ -72,6 +76,8 @@ export function CollectionSection() {
         }
       } catch (err) {
         console.warn("Failed to load menu items from Supabase, using default local assets:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -139,13 +145,32 @@ export function CollectionSection() {
         </motion.div>
 
         {/* Menu Grid (2 columns on mobile, 4 columns on desktop) */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 px-2 md:px-4"
-        >
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 px-2 md:px-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="relative p-3 border border-[#8c7a6b]/15 dark:border-stone-800/60 rounded-[28px] bg-white dark:bg-stone-900/50 shadow-sm animate-pulse"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden rounded-[20px] bg-[#E4E1DA]/30 border border-[#8c7a6b]/5 dark:border-stone-800/30 flex flex-col items-center justify-end p-4 md:p-6 gap-2">
+                  {/* Item Name Skeleton */}
+                  <div className="w-4/5 h-5 rounded-md bg-[#D4D1CA]/60" />
+                  {/* Item Description Skeleton */}
+                  <div className="w-3/5 h-3.5 rounded-md bg-[#D4D1CA]/40 mt-1" />
+                  {/* Price Skeleton */}
+                  <div className="w-1/4 h-4 rounded-md bg-[#D4D1CA]/60 mt-2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={containerVariants}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 px-2 md:px-4"
+          >
           {menuItems.map((item) => (
             <motion.div
               key={item.id}
@@ -193,7 +218,8 @@ export function CollectionSection() {
               </div>
             </motion.div>
           ))}
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Explore Our Menu Button */}
         <motion.div

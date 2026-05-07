@@ -64,6 +64,7 @@ const Card: FC<iCardProps> = ({
 						src={src}
 						alt="Background"
 						fill
+						sizes="(max-width: 1024px) 90vw, 1000px"
 					/>
 					{/* Dark overlay for readability and premium look */}
 					<div className="absolute inset-0 bg-black/40 transition-opacity duration-300 group-hover:bg-black/30" />

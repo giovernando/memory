@@ -117,7 +117,7 @@ export function FooterSection() {
             fill
             className="object-cover opacity-65"
             sizes="100vw"
-            priority
+            loading="lazy"
           />
         </div>
 
