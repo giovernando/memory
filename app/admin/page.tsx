@@ -6,7 +6,7 @@ import {
   Key, LogOut, Coffee, Image as ImageIcon, Sliders, Layers, 
   Plus, Trash2, Edit3, Save, X, UploadCloud, CheckCircle2, 
   AlertCircle, ArrowRight, Star, ChevronRight, Info, Calendar,
-  Database, RefreshCw, BarChart3, Clock, Settings
+  Database, RefreshCw, BarChart3, Clock, Settings, Mail, Lock
 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
@@ -71,7 +71,8 @@ const DEFAULT_HOMEPAGE_CARDS = [
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passcode, setPasscode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [dbStatus, setDbStatus] = useState<"checking" | "connected" | "offline">("checking");
   const [activeTab, setActiveTab] = useState<"overview" | "menu" | "gallery" | "sections" | "countdown">("overview");
@@ -99,27 +100,28 @@ export default function AdminDashboard() {
 
   // Check login, DB configuration, and local configs on mount
   useEffect(() => {
-    const auth = localStorage.getItem("coffee_admin_auth");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-    }
+    const checkAuthAndConfig = async () => {
+      // 1. Check countdown config
+      const localTitle = localStorage.getItem("fow_countdown_title");
+      const localDate = localStorage.getItem("fow_countdown_date");
+      const localActive = localStorage.getItem("fow_countdown_active");
+      if (localTitle) setCountdownTitle(localTitle);
+      if (localDate) setCountdownDate(localDate);
+      if (localActive) setCountdownActive(localActive === "true");
 
-    // Load countdown local values
-    const localTitle = localStorage.getItem("fow_countdown_title");
-    const localDate = localStorage.getItem("fow_countdown_date");
-    const localActive = localStorage.getItem("fow_countdown_active");
-    if (localTitle) setCountdownTitle(localTitle);
-    if (localDate) setCountdownDate(localDate);
-    if (localActive) setCountdownActive(localActive === "true");
-
-    const checkConfig = async () => {
+      // 2. Check Database config and connection
       if (!isSupabaseConfigured() || !supabase) {
         setDbStatus("offline");
-        // Pre-populate with default local assets so Dashboard works in Demo Mode!
         setMenuItems(DEFAULT_MENU_ITEMS);
         setGalleryItems(DEFAULT_GALLERY_ITEMS);
         setFeaturedProducts(DEFAULT_FEATURED_PRODUCTS);
         setHomepageCards(DEFAULT_HOMEPAGE_CARDS);
+
+        // Offline Auth fallback
+        const auth = localStorage.getItem("coffee_admin_auth");
+        if (auth === "true") {
+          setIsAuthenticated(true);
+        }
         return;
       }
 
@@ -131,18 +133,33 @@ export default function AdminDashboard() {
         
         setDbStatus("connected");
         loadAllData();
+
+        // Online Auth check: check Supabase session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setIsAuthenticated(true);
+        } else {
+          const auth = localStorage.getItem("coffee_admin_auth");
+          if (auth === "true") {
+            setIsAuthenticated(true);
+          }
+        }
       } catch (err) {
         console.error("Database check failed:", err);
         setDbStatus("offline");
-        // Fallback populating
         setMenuItems(DEFAULT_MENU_ITEMS);
         setGalleryItems(DEFAULT_GALLERY_ITEMS);
         setFeaturedProducts(DEFAULT_FEATURED_PRODUCTS);
         setHomepageCards(DEFAULT_HOMEPAGE_CARDS);
+
+        const auth = localStorage.getItem("coffee_admin_auth");
+        if (auth === "true") {
+          setIsAuthenticated(true);
+        }
       }
     };
 
-    checkConfig();
+    checkAuthAndConfig();
   }, [isAuthenticated]);
 
   // Alert dismiss helper
@@ -211,22 +228,62 @@ export default function AdminDashboard() {
   };
 
   // Handle Login Gate Submit
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const correctPasscode = process.env.NEXT_PUBLIC_ADMIN_PASSCODE || "admin123";
-    if (passcode === correctPasscode) {
-      localStorage.setItem("coffee_admin_auth", "true");
-      setIsAuthenticated(true);
-      setLoginError("");
-    } else {
-      setLoginError("passcode salah. silakan coba lagi.");
+    setLoginError("");
+
+    if (!email || !password) {
+      setLoginError("Mohon masukkan email dan password.");
+      return;
+    }
+
+    if (!isSupabaseConfigured() || !supabase) {
+      // Fallback Demo Mode login check
+      const mockEmail = "admin@fowcoffee.com";
+      const mockPassword = "admin123";
+      if (email === mockEmail && password === mockPassword) {
+        localStorage.setItem("coffee_admin_auth", "true");
+        setIsAuthenticated(true);
+        setLoginError("");
+      } else {
+        setLoginError("Demo Mode: gunakan email admin@fowcoffee.com dan password admin123");
+      }
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data?.session) {
+        localStorage.setItem("coffee_admin_auth", "true");
+        setIsAuthenticated(true);
+        setLoginError("");
+      }
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      setLoginError(err.message || "Gagal masuk. Silakan periksa kembali email dan password Anda.");
+    } finally {
+      setLoading(false);
     }
   };
 
   // Logout handler
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem("coffee_admin_auth");
     setIsAuthenticated(false);
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error("Error signing out:", err);
+      }
+    }
   };
 
   // Save Countdown Configuration
@@ -656,10 +713,10 @@ export default function AdminDashboard() {
   // Render Login Gate
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#F1EEDC] text-black flex flex-col justify-center items-center px-4 relative grain-overlay">
+      <div className="h-screen w-screen bg-[#F1EEDC] text-black flex flex-col justify-center items-center px-4 relative grain-overlay overflow-hidden">
         
         {/* Decorative elements */}
-        <div className="absolute top-20 text-center space-y-2 select-none animate-reveal-up">
+        <div className="text-center space-y-2 select-none animate-reveal-up mb-8 z-10">
           <div className="inline-flex items-center gap-1.5 bg-[#E7F672] text-black px-4 py-1.5 border-[3px] border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <Coffee className="w-4 h-4" />
             <span className="text-[10px] uppercase font-black tracking-widest">Fow Coffee Panel</span>
@@ -667,47 +724,70 @@ export default function AdminDashboard() {
           <h1 className="text-4xl font-black uppercase tracking-tighter text-black mt-3">Admin Dashboard</h1>
         </div>
 
-        {/* Passcode card (Neo-Brutalist) */}
+        {/* Login card (Neo-Brutalist) */}
         <div className="bg-white p-8 rounded-none max-w-sm w-full border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-scale-in relative z-10">
           <div className="text-center mb-6">
             <div className="h-14 w-14 rounded-none bg-[#E7F672] text-black border-[3px] border-black flex items-center justify-center mx-auto mb-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
               <Key className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-black uppercase tracking-tighter">Akses Terkunci</h2>
-            <p className="text-xs text-stone-700 font-bold mt-1.5 uppercase tracking-wide">Masukkan passcode admin Anda untuk membuka panel kontrol.</p>
+            <p className="text-xs text-stone-700 font-bold mt-1.5 uppercase tracking-wide">Masuk dengan akun admin Supabase Anda untuk membuka kontrol.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 animate-pulse" />
+                <span>Alamat Email</span>
+              </label>
+              <input
+                type="email"
+                placeholder="admin@coffee.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full text-sm font-bold bg-white border-[3px] border-black rounded-none py-3 px-4 text-black focus:outline-none focus:bg-yellow-50 focus:ring-0 transition-colors"
+                autoFocus
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" />
+                <span>Kata Sandi</span>
+              </label>
               <input
                 type="password"
-                placeholder="••••••"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className="w-full tracking-widest text-center text-lg font-black bg-white border-[3px] border-black rounded-none py-3.5 px-4 text-black focus:outline-none focus:bg-yellow-50 focus:ring-0 transition-colors"
-                autoFocus
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full text-sm font-bold bg-white border-[3px] border-black rounded-none py-3 px-4 text-black focus:outline-none focus:bg-yellow-50 focus:ring-0 transition-colors"
+                required
               />
-              {loginError && (
-                <p className="text-xs text-red-600 font-black uppercase tracking-wide mt-3 text-center flex items-center justify-center gap-1.5 bg-red-100 border-[2px] border-black p-2 rounded-none animate-shake">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{loginError}</span>
-                </p>
-              )}
             </div>
+
+            {loginError && (
+              <div className="text-xs text-red-600 font-black uppercase tracking-wide text-center flex items-start gap-1.5 bg-red-100 border-[2px] border-black p-3 rounded-none animate-shake leading-relaxed">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="text-left">{loginError}</span>
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-[#E7F672] text-black border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all py-3.5 px-6 rounded-none text-xs font-black uppercase tracking-wider"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-[#E7F672] text-black border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all py-3.5 px-6 rounded-none text-xs font-black uppercase tracking-wider disabled:opacity-50 disabled:pointer-events-none"
             >
-              <span>Unlock Dashboard</span>
+              <span>{loading ? "Memverifikasi..." : "Masuk Dashboard"}</span>
               <ArrowRight className="w-4 h-4 stroke-[3px]" />
             </button>
           </form>
 
-          <p className="text-[10px] text-center text-stone-600 font-bold uppercase tracking-wider mt-6 leading-relaxed bg-[#F1EEDC] p-2 border-[2px] border-black">
-            bawaan passcode adalah <span className="font-mono bg-yellow-200 px-1 text-black">admin123</span>. <br />
-            bisa diubah lewat file .env di key <code className="font-mono text-[9px] lowercase font-bold">NEXT_PUBLIC_ADMIN_PASSCODE</code>.
-          </p>
+          {dbStatus === "offline" && (
+            <p className="text-[10px] text-center text-stone-600 font-bold uppercase tracking-wider mt-5 leading-relaxed bg-[#F1EEDC] p-2 border-[2px] border-black">
+              Demo Mode: gunakan email <span className="font-mono bg-yellow-200 px-1 text-black">admin@fowcoffee.com</span> dan password <span className="font-mono bg-yellow-200 px-1 text-black">admin123</span>.
+            </p>
+          )}
         </div>
       </div>
     );
