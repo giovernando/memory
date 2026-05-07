@@ -116,7 +116,7 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isDbConnected, setIsDbConnected] = useState<boolean>(false);
 
   // Detail item user action states
@@ -541,6 +541,7 @@ export default function MenuPage() {
                   src={selectedItem.image_url || "/placeholder.svg"}
                   alt={selectedItem.name}
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
                 {/* Visual gradients for readable floating elements */}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 
 const images = [
@@ -40,13 +41,16 @@ const KineticGridItem = ({ image, scrollVelocity }: KineticGridItemProps) => {
             className="w-full h-80 relative overflow-hidden rounded-lg"
             style={{ skewX: skew }}
         >
-            <img
+            <Image
                 src={image}
                 alt="A landscape"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="absolute inset-0 h-full w-full object-cover"
                 style={{
                      transform: "scale(1.15)" // Slight zoom to prevent edges showing on skew
                 }}
+                loading="lazy"
             />
         </motion.div>
     );
