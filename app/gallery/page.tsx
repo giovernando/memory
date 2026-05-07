@@ -299,7 +299,7 @@ export default function GalleryPage() {
 
     async function loadGallery() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from("gallery_items")
           .select("*")
           .order("sort_order", { ascending: true });

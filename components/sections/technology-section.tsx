@@ -94,7 +94,7 @@ export function TechnologySection() {
 
     async function fetchTechImages() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from("section_images")
           .select("*")
           .eq("section", "technology");

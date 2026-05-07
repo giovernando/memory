@@ -45,7 +45,7 @@ export function CollectionSection() {
 
     async function loadMenu() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from("menu_items")
           .select("*")
           .order("sort_order", { ascending: true });
@@ -75,7 +75,7 @@ export function CollectionSection() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as any }
     }
   };
 
@@ -98,7 +98,7 @@ export function CollectionSection() {
       scale: 1,
       transition: {
         duration: 0.7,
-        ease: [0.16, 1, 0.3, 1]
+        ease: [0.16, 1, 0.3, 1] as any
       }
     }
   };
