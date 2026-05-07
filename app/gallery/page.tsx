@@ -421,20 +421,20 @@ export default function GalleryPage() {
           </div>
         ) : (
           <motion.div
-            layout
             className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8 w-full animate-reveal-up animation-delay-200"
           >
             <AnimatePresence mode="popLayout">
               {filteredItems.map((item) => (
                 <motion.div
-                  layout
+                  layout="position"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
+                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
                   transition={{ duration: 0.4 }}
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
-                  className="group relative aspect-[4/5] overflow-hidden rounded-[24px] bg-white border border-[#8c7a6b]/15 dark:border-stone-800 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 cursor-pointer"
+                  className="group relative aspect-[4/5] overflow-hidden rounded-[24px] bg-white border border-[#8c7a6b]/15 dark:border-stone-800 shadow-sm md:hover:shadow-xl cursor-pointer transition-[box-shadow,border-color,background-color] duration-300 ease-out will-change-transform"
                 >
                   {/* Fade Image with Custom Skeleton Loading Placeholder */}
                   <FadeImage
