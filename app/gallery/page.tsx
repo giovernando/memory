@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Coffee, Clock, Info, ChevronRight, Award, Flame, Star, Sparkles } from "lucide-react";
+import { X, Coffee, ChevronRight, Star } from "lucide-react";
 import { Header } from "@/components/header";
 import { FooterSection } from "@/components/sections/footer-section";
 import { FadeImage } from "@/components/fade-image";
@@ -368,19 +368,11 @@ export default function GalleryPage() {
 
         {/* Gallery Hero Header Section */}
         <div className="text-center mb-12 max-w-2xl space-y-4 animate-reveal-up">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#2F3E30]/20 bg-[#E4E1DA]/40 text-xs font-semibold tracking-wider uppercase mb-1">
-            {/* <Sparkles className="w-3.5 h-3.5 text-[#738A75] animate-pulse" /> */}
-            <span>Koleksi Eksklusif</span>
-          </div>
 
           <h1 className="text-4xl md:text-6xl font-bold font-display tracking-tight text-[#2F3E30] leading-tight">
             Jurnal Visual <br />
             <span className="font-medium text-[#738A75]">Coffee Shop</span>
           </h1>
-
-          <p className="text-sm md:text-base text-[#2F3E30]/80 leading-relaxed font-sans font-medium">
-            Setiap cangkir menyembunyikan dedikasi petani, keahlian tangan barista, serta kenyamanan ruang yang kami bangun untuk Anda. Klik foto untuk menjelajahi spesifikasi dan kisah di baliknya.
-          </p>
         </div>
 
         {/* Categories Navigation Filter Tabs */}
@@ -418,10 +410,10 @@ export default function GalleryPage() {
               >
                 {/* Rating Badge Skeleton */}
                 <div className="absolute top-3.5 right-3.5 w-12 h-6 rounded-full bg-[#D4D1CA]/60" />
-                
+
                 {/* Category Skeleton */}
                 <div className="w-16 h-3.5 rounded-full bg-[#D4D1CA]/60" />
-                
+
                 {/* Title Skeleton */}
                 <div className="w-3/4 h-5 rounded-md bg-[#D4D1CA]/60" />
               </div>
@@ -467,7 +459,7 @@ export default function GalleryPage() {
 
                     {/* Subtle Interactive Arrow displayed on Hover (Desktop) */}
                     <div className="flex items-center gap-1.2 mt-2 text-[10px] sm:text-xs font-semibold text-[#738A75] opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0 transition-transform duration-300 font-sans">
-                      <span>Lihat Detail</span>
+                      <span>Perbesar Foto</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </div>
                   </div>
@@ -504,7 +496,7 @@ export default function GalleryPage() {
 
       </main>
 
-      {/* Global Interactive Lightbox Modal (Detail View) */}
+      {/* Global Interactive Lightbox Modal (Detail View - Pure Photo Only) */}
       <AnimatePresence>
         {selectedItem && (
           <motion.div
@@ -512,102 +504,35 @@ export default function GalleryPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedItem(null)}
-            className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 cursor-zoom-out"
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 cursor-zoom-out"
           >
             {/* Modal Body Container */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 30 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#F4F1EA] text-[#2F3E30] rounded-[32px] overflow-hidden max-w-4xl w-full max-h-[90vh] md:max-h-[85vh] shadow-2xl border border-stone-300/40 flex flex-col md:flex-row relative cursor-default"
+              className="relative max-w-5xl w-full h-[75vh] md:h-[80vh] flex items-center justify-center cursor-default select-none"
             >
-              {/* Close Button Floating top right */}
+              {/* Close Button Floating top right of the modal */}
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-black/40 text-white hover:bg-[#2F3E30] hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none shadow-md"
-                aria-label="Tutup Detail"
+                className="absolute -top-12 right-2 sm:top-4 sm:right-4 z-50 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/10 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none shadow-2xl"
+                aria-label="Tutup Foto"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
 
-              {/* Left Column: Premium Image Frame */}
-              <div className="w-full md:w-1/2 relative min-h-[260px] md:min-h-full aspect-[4/5] md:aspect-auto bg-stone-950 flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-r border-stone-200/50">
+              <div className="relative w-full h-full p-2">
                 <Image
                   src={selectedItem.src}
                   alt={selectedItem.title}
                   fill
                   priority
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
+                  sizes="(max-width: 1200px) 100vw, 1200px"
+                  className="object-contain rounded-2xl select-none pointer-events-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                 />
-
-                {/* Visual Watermark/Indicator */}
-                <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/45 backdrop-blur-sm border border-white/10 text-white text-[10px] font-semibold font-sans uppercase tracking-widest">
-                  <Coffee className="w-3.5 h-3.5 text-[#738A75]" />
-                  <span>Coffee Journal</span>
-                </div>
-              </div>
-
-              {/* Right Column: Detailed Storytelling and Specifications */}
-              <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between overflow-y-auto max-h-[50vh] md:max-h-none">
-
-                {/* Content Top Section */}
-                <div className="space-y-4">
-
-                  {/* Category Pill and Rating */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider font-sans border"
-                      style={{
-                        color: selectedItem.accentColor,
-                        borderColor: `${selectedItem.accentColor}30`,
-                        backgroundColor: `${selectedItem.accentColor}12`
-                      }}
-                    >
-                      {selectedItem.categoryLabel}
-                    </span>
-
-                    {selectedItem.rating && (
-                      <div className="flex items-center gap-1 text-[#2F3E30] text-xs font-bold font-sans">
-                        <Star className="w-4 h-4 fill-amber-500 stroke-amber-500" />
-                        <span>{selectedItem.rating} / 5.0 Rating</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Main Title */}
-                  <h2 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-[#2F3E30] leading-tight">
-                    {selectedItem.title}
-                  </h2>
-
-                  {/* Divider line */}
-                  <div className="h-[1px] w-12 bg-[#738A75]" />
-
-                  {/* Detailed Description */}
-                  <p className="text-xs sm:text-sm md:text-base text-stone-600 leading-relaxed font-sans font-medium text-justify">
-                    {selectedItem.detailedDescription}
-                  </p>
-                </div>
-
-                {/* Content Bottom Section (Technical Specifications Panel) */}
-                <div className="mt-8 border-t border-stone-200/80 pt-5 space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#738A75] mb-2 font-sans">
-                    <Info className="w-3.5 h-3.5" />
-                    <span>Detail Spesifikasi & Parameter</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-y-3.5 gap-x-4 text-xs font-sans">
-                    {Object.entries(selectedItem.specs).map(([key, value]) => (
-                      <div key={key} className="flex flex-col border-b border-stone-200/40 pb-2">
-                        <span className="text-stone-400 font-bold tracking-wide text-[9px] uppercase">{key}</span>
-                        <span className="text-[#2F3E30] font-bold mt-1 leading-snug text-stone-700/90">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
               </div>
             </motion.div>
           </motion.div>
